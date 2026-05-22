@@ -16,4 +16,5 @@ public class ProductResponseDTO {
     private int totalBuyers;
     private float avgRating;
     private String description;
+    private String category;
 }

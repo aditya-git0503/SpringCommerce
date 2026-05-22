@@ -7,6 +7,7 @@ import com.aditya.ecommerce.dto.auth.ResetPasswordDTO;
 import com.aditya.ecommerce.service.AuthService;
 import org.springframework.web.bind.annotation.*;
 
+@CrossOrigin(origins = "http://localhost:5173")
 @RestController
 @RequestMapping("/auth")
 public class AuthController {

@@ -37,4 +37,7 @@ public class Product {
     private float avgRating;
 
     private String description;
+
+    @Column(name = "category")
+    private String category;
 }

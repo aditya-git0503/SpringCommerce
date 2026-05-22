@@ -9,9 +9,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CartResponseDTO {
+    private int cartId;
     private int quantity;
     private int productId;
     private String productName;
     private float price;
     private String imageUrl;
+    private int stockAmount;
 }
