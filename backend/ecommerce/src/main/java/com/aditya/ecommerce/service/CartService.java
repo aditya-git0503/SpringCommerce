@@ -38,6 +38,9 @@ public class CartService {
 
         Product confirmedProduct = productRepo.findById(productId)
                 .orElseThrow();
+        if (quantity <= 0) {
+            throw new RuntimeException("Quantity should be greater than 0");
+        }
 
         Optional<CartItem> cartItem =
                 cartItemRepo.findByUserAndProduct(user, confirmedProduct);
@@ -45,15 +48,20 @@ public class CartService {
         if(cartItem.isPresent()){
 
             CartItem existingItem = cartItem.get();
+            int nextQuantity = existingItem.getQuantity() + quantity;
+            if (nextQuantity > confirmedProduct.getStockAmount()) {
+                throw new RuntimeException("Requested quantity exceeds available stock");
+            }
 
-            existingItem.setQuantity(
-                    existingItem.getQuantity() + quantity
-            );
+            existingItem.setQuantity(nextQuantity);
 
             cartItemRepo.save(existingItem);
         }
 
         else{
+            if (quantity > confirmedProduct.getStockAmount()) {
+                throw new RuntimeException("Requested quantity exceeds available stock");
+            }
 
             CartItem newCartItem = new CartItem();
 
@@ -75,26 +83,36 @@ public class CartService {
                 .toList();
     }
 
-    public String removeFromCart(int cartId) throws Exception {
+    public String removeFromCart(User user, int cartId) throws Exception {
 
         CartItem cartItem = cartItemRepo.findById(cartId)
                 .orElseThrow(() -> new Exception("Cart item not found"));
+        if (cartItem.getUser().getUserid() != user.getUserid()) {
+            throw new Exception("Unauthorized cart access");
+        }
 
         cartItemRepo.delete(cartItem);
 
         return "Item removed from cart";
     }
 
-    public String updateQuantity(int cartId, int quantity) throws Exception {
+    public String updateQuantity(User user, int cartId, int quantity) throws Exception {
 
         CartItem existingCartItem = cartItemRepo.findById(cartId)
                 .orElseThrow(() -> new Exception("Cart Item not found"));
+        if (existingCartItem.getUser().getUserid() != user.getUserid()) {
+            throw new Exception("Unauthorized cart access");
+        }
 
         if(quantity <= 0){
 
             cartItemRepo.delete(existingCartItem);
 
             return "Item removed from cart";
+        }
+
+        if (quantity > existingCartItem.getProduct().getStockAmount()) {
+            throw new Exception("Requested quantity exceeds available stock");
         }
 
         existingCartItem.setQuantity(quantity);

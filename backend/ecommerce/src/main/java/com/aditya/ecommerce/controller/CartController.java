@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@CrossOrigin(origins = "http://localhost:5173")
 @RestController
 public class CartController {
 
@@ -57,8 +56,15 @@ public class CartController {
 
     @DeleteMapping("/cart/remove/{cartId}")
     public String removeFromCart(@PathVariable int cartId) throws Exception {
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
 
-        return cartService.removeFromCart(cartId);
+        String email = authentication.getName();
+
+        User user = userRepo.findByUserEmail(email)
+                .orElseThrow();
+
+        return cartService.removeFromCart(user, cartId);
     }
 
     @PutMapping("/cart/update")
@@ -66,7 +72,14 @@ public class CartController {
             @RequestParam int cartId,
             @RequestParam int quantity
     ) throws Exception {
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
 
-        return cartService.updateQuantity(cartId, quantity);
+        String email = authentication.getName();
+
+        User user = userRepo.findByUserEmail(email)
+                .orElseThrow();
+
+        return cartService.updateQuantity(user, cartId, quantity);
     }
 }

@@ -11,19 +11,23 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    async function loadOrders() {
-      try {
-        setLoading(true);
-        const response = await api.get("/orders");
-        setOrders(response.data);
-      } catch (err) {
-        setError(err.response?.data || "Unable to fetch orders");
-      } finally {
-        setLoading(false);
-      }
-    }
+  const [ratingInputs, setRatingInputs] = useState({}); 
+  const [ratingMessage, setRatingMessage] = useState(""); 
 
+  async function loadOrders() {
+    try {
+      setLoading(true);
+      const response = await api.get("/orders");
+      setOrders(response.data);
+    } catch (err) {
+      setError(err.response?.data || "Unable to fetch orders");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadOrders();
   }, []);
 
@@ -31,6 +35,33 @@ export default function OrdersPage() {
     logout();
     navigate("/login");
   }
+
+  async function handleRatingSubmit(productId) {
+  const selectedValue = ratingInputs[productId];
+
+  if (!selectedValue) {
+    setRatingMessage("Please select a rating first");
+    return;
+  }
+
+  try {
+    await api.post("/ratings", {
+      productId: productId,
+      rating: Number(selectedValue),
+    });
+
+    setRatingMessage("Rating submitted successfully");
+
+    setRatingInputs((prev) => ({
+      ...prev,
+      [productId]: "",
+    }));
+
+    await loadOrders();
+  } catch (err) {
+    setRatingMessage(err.response?.data || "Failed to submit rating");
+  }
+}
 
   return (
     <div className="page orders-page">
@@ -45,6 +76,7 @@ export default function OrdersPage() {
           </button>
         </div>
       </header>
+      {ratingMessage && <p>{ratingMessage}</p>}
 
       {loading && <p>Loading orders...</p>}
       {error && <p className="error-text">{error}</p>}
@@ -71,6 +103,27 @@ export default function OrdersPage() {
                     <p>Quantity: {item.quantity}</p>
                     <p>Price: ₹{item.priceAtPurchase}</p>
                     <p>{item.description}</p>
+                    <div>
+                      <select
+                        value={ratingInputs[item.productId] || ""}
+                        onChange={(event) =>
+                          setRatingInputs((prev) => ({
+                            ...prev,
+                            [item.productId]: event.target.value,
+                          }))
+                        }
+                      >
+                        <option value="">Rate this product</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                      </select>
+                      <button type="button" onClick={() => handleRatingSubmit(item.productId)}>
+                        Submit Rating
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
