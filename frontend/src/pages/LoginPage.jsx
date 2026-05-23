@@ -163,21 +163,24 @@ export default function LoginPage() {
             />
 
             <label>Password</label>
-            <input
-              required
-              type={showLoginPassword ? "text" : "password"}
-              value={loginForm.password}
-              onChange={(event) =>
-                setLoginForm((prev) => ({ ...prev, password: event.target.value }))
-              }
-              placeholder="Enter your password"
-            />
-            <button
-              type="button"
-              onClick={() => setShowLoginPassword((prev) => !prev)}
-            >
-              {showLoginPassword ? "Hide" : "Show"}
-            </button>
+            <div className="password-row">
+              <input
+                required
+                type={showLoginPassword ? "text" : "password"}
+                value={loginForm.password}
+                onChange={(event) =>
+                  setLoginForm((prev) => ({ ...prev, password: event.target.value }))
+                }
+                placeholder="Enter your password"
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowLoginPassword((prev) => !prev)}
+              >
+                {showLoginPassword ? "Hide" : "Show"}
+              </button>
+            </div>
 
             <button type="submit" disabled={loading}>
               {loading ? "Signing in..." : "Sign In"}
@@ -185,6 +188,7 @@ export default function LoginPage() {
 
             <button
               type="button"
+              className="linkish-btn"
               onClick={() => {
                 setShowResetForm(true);
                 clearFeedback();
@@ -213,44 +217,50 @@ export default function LoginPage() {
             />
 
             <label>New Password</label>
-            <input
-              required
-              type={showResetNewPassword ? "text" : "password"}
-              value={resetForm.newPassword}
-              onChange={(event) =>
-                setResetForm((prev) => ({
-                  ...prev,
-                  newPassword: event.target.value,
-                }))
-              }
-              placeholder="Enter new password"
-            />
-            <button
-              type="button"
-              onClick={() => setShowResetNewPassword((prev) => !prev)}
-            >
-              {showResetNewPassword ? "Hide" : "Show"}
-            </button>
+            <div className="password-row">
+              <input
+                required
+                type={showResetNewPassword ? "text" : "password"}
+                value={resetForm.newPassword}
+                onChange={(event) =>
+                  setResetForm((prev) => ({
+                    ...prev,
+                    newPassword: event.target.value,
+                  }))
+                }
+                placeholder="Enter new password"
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowResetNewPassword((prev) => !prev)}
+              >
+                {showResetNewPassword ? "Hide" : "Show"}
+              </button>
+            </div>
 
             <label>Confirm New Password</label>
-            <input
-              required
-              type={showResetConfirmPassword ? "text" : "password"}
-              value={resetForm.confirmPassword}
-              onChange={(event) =>
-                setResetForm((prev) => ({
-                  ...prev,
-                  confirmPassword: event.target.value,
-                }))
-              }
-              placeholder="Confirm new password"
-            />
-            <button
-              type="button"
-              onClick={() => setShowResetConfirmPassword((prev) => !prev)}
-            >
-              {showResetConfirmPassword ? "Hide" : "Show"}
-            </button>
+            <div className="password-row">
+              <input
+                required
+                type={showResetConfirmPassword ? "text" : "password"}
+                value={resetForm.confirmPassword}
+                onChange={(event) =>
+                  setResetForm((prev) => ({
+                    ...prev,
+                    confirmPassword: event.target.value,
+                  }))
+                }
+                placeholder="Confirm new password"
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowResetConfirmPassword((prev) => !prev)}
+              >
+                {showResetConfirmPassword ? "Hide" : "Show"}
+              </button>
+            </div>
 
             <button type="submit" disabled={loading}>
               {loading ? "Resetting..." : "Reset Password"}
@@ -293,41 +303,47 @@ export default function LoginPage() {
             />
 
             <label>Password</label>
-            <input
-              required
-              type={showSignupPassword ? "text" : "password"}
-              value={registerForm.password}
-              onChange={(event) =>
-                setRegisterForm((prev) => ({ ...prev, password: event.target.value }))
-              }
-              placeholder="Create a password"
-            />
-            <button
-              type="button"
-              onClick={() => setShowSignupPassword((prev) => !prev)}
-            >
-              {showSignupPassword ? "Hide" : "Show"}
-            </button>
+            <div className="password-row">
+              <input
+                required
+                type={showSignupPassword ? "text" : "password"}
+                value={registerForm.password}
+                onChange={(event) =>
+                  setRegisterForm((prev) => ({ ...prev, password: event.target.value }))
+                }
+                placeholder="Create a password"
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowSignupPassword((prev) => !prev)}
+              >
+                {showSignupPassword ? "Hide" : "Show"}
+              </button>
+            </div>
 
             <label>Confirm Password</label>
-            <input
-              required
-              type={showSignupConfirmPassword ? "text" : "password"}
-              value={registerForm.confirmPassword}
-              onChange={(event) =>
-                setRegisterForm((prev) => ({
-                  ...prev,
-                  confirmPassword: event.target.value,
-                }))
-              }
-              placeholder="Confirm your password"
-            />
-            <button
-              type="button"
-              onClick={() => setShowSignupConfirmPassword((prev) => !prev)}
-            >
-              {showSignupConfirmPassword ? "Hide" : "Show"}
-            </button>
+            <div className="password-row">
+              <input
+                required
+                type={showSignupConfirmPassword ? "text" : "password"}
+                value={registerForm.confirmPassword}
+                onChange={(event) =>
+                  setRegisterForm((prev) => ({
+                    ...prev,
+                    confirmPassword: event.target.value,
+                  }))
+                }
+                placeholder="Confirm your password"
+              />
+              <button
+                type="button"
+                className="password-toggle"
+                onClick={() => setShowSignupConfirmPassword((prev) => !prev)}
+              >
+                {showSignupConfirmPassword ? "Hide" : "Show"}
+              </button>
+            </div>
 
             <button type="submit" disabled={loading}>
               {loading ? "Creating account..." : "Sign Up"}

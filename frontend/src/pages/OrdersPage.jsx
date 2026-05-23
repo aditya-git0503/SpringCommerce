@@ -77,7 +77,7 @@ export default function OrdersPage() {
           </button>
         </div>
       </header>
-      {ratingMessage && <p>{ratingMessage}</p>}
+      {ratingMessage && <p className="notice-text">{ratingMessage}</p>}
 
       {loading && <p>Loading orders...</p>}
       {error && <p className="error-text">{error}</p>}
@@ -102,29 +102,34 @@ export default function OrdersPage() {
                   <div>
                     <p>{item.productName}</p>
                     <p>Quantity: {item.quantity}</p>
-                    <p>Price: ₹{item.priceAtPurchase}</p>
+                    <p>Unit Price: ₹{item.priceAtPurchase}</p>
+                    <p>Item Total: ₹{item.priceAtPurchase * item.quantity}</p>
                     <p>{item.description}</p>
-                    <div>
-                      <select
-                        value={ratingInputs[item.productId] || ""}
-                        onChange={(event) =>
-                          setRatingInputs((prev) => ({
-                            ...prev,
-                            [item.productId]: event.target.value,
-                          }))
-                        }
-                      >
-                        <option value="">Rate this product</option>
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5">5</option>
-                      </select>
-                      <button type="button" onClick={() => handleRatingSubmit(item.productId)}>
-                        Submit Rating
-                      </button>
-                    </div>
+                    {item.userRating ? (
+                      <p>Rated: {item.userRating}/5</p>
+                    ) : (
+                      <div className="rating-actions">
+                        <select
+                          value={ratingInputs[item.productId] || ""}
+                          onChange={(event) =>
+                            setRatingInputs((prev) => ({
+                              ...prev,
+                              [item.productId]: event.target.value,
+                            }))
+                          }
+                        >
+                          <option value="">Rate this product</option>
+                          <option value="1">1</option>
+                          <option value="2">2</option>
+                          <option value="3">3</option>
+                          <option value="4">4</option>
+                          <option value="5">5</option>
+                        </select>
+                        <button type="button" onClick={() => handleRatingSubmit(item.productId)}>
+                          Submit Rating
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}

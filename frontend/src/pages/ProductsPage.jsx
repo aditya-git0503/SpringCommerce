@@ -33,6 +33,7 @@ export default function ProductsPage() {
   const [loadingCart, setLoadingCart] = useState(true);
   const [actionError, setActionError] = useState("");
   const [actionSuccess, setActionSuccess] = useState("");
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
     loadProducts();
@@ -45,6 +46,16 @@ export default function ProductsPage() {
     }
     loadAddresses();
   }, [showCheckout]);
+
+  useEffect(() => {
+    function onScroll() {
+      setShowScrollTop(window.scrollY > 320);
+    }
+
+    window.addEventListener("scroll", onScroll);
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   async function loadProducts() {
     try {
@@ -110,7 +121,7 @@ export default function ProductsPage() {
         productId,
         quantity: 1,
       });
-      setActionSuccess("Product added to cart");
+      // setActionSuccess("Product added to cart");
       await loadCartItems();
     } catch (err) {
       setActionError(getApiErrorMessage(err, "Failed to add to cart"));
@@ -232,6 +243,10 @@ export default function ProductsPage() {
     newAddress.city.trim() !== "" &&
     newAddress.state.trim() !== "" &&
     /^\d{6}$/.test(newAddress.pincode);
+
+  function handleScrollToTop() {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
 
   return (
     <div className="page products-page">
@@ -395,29 +410,31 @@ export default function ProductsPage() {
             <strong>Selected total: ₹{selectedTotal}</strong>
           </p>
 
-          <button
-            type="button"
-            disabled={selectedItems.length === 0}
-            onClick={() => {
-              setShowCheckout(true);
-              setActionError("");
-              setActionSuccess("");
-            }}
-          >
-            Checkout
-          </button>
-          {showCheckout && (
+          <div className="cart-action-row">
             <button
               type="button"
+              disabled={selectedItems.length === 0}
               onClick={() => {
-                setShowCheckout(false);
+                setShowCheckout(true);
                 setActionError("");
                 setActionSuccess("");
               }}
             >
-              Edit Cart
+              Checkout
             </button>
-          )}
+            {showCheckout && (
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCheckout(false);
+                  setActionError("");
+                  setActionSuccess("");
+                }}
+              >
+                Edit Cart
+              </button>
+            )}
+          </div>
 
           {showCheckout && (
             <div className="checkout-box">
@@ -508,6 +525,17 @@ export default function ProductsPage() {
           )}
         </aside>
       </div>
+
+      {showScrollTop && (
+        <button
+          type="button"
+          className="scroll-top-btn"
+          onClick={handleScrollToTop}
+          aria-label="Scroll to top"
+        >
+          ↑ Top
+        </button>
+      )}
     </div>
   );
 }

@@ -2,6 +2,7 @@ package com.aditya.ecommerce.service;
 
 import com.aditya.ecommerce.dto.product.RateProductRequestDTO;
 import com.aditya.ecommerce.entity.*;
+import com.aditya.ecommerce.exception.ConflictException;
 import com.aditya.ecommerce.exception.ForbiddenException;
 import com.aditya.ecommerce.exception.ResourceNotFoundException;
 import com.aditya.ecommerce.repo.*;
@@ -48,18 +49,13 @@ public class RatingService {
         }
 
         Optional<ProductRating> existingRating = productRatingRepo.findByUserAndProduct(confirmedUser, confirmedProduct);
-        ProductRating ratingToSave;
-
         if(existingRating.isPresent()){
-            ratingToSave = existingRating.get();
-            ratingToSave.setRating(request.getRating());
+            throw new ConflictException("You have already rated this product");
         }
-        else{
-            ratingToSave = new ProductRating();
-            ratingToSave.setUser(confirmedUser);
-            ratingToSave.setProduct(confirmedProduct);
-            ratingToSave.setRating(request.getRating());
-        }
+        ProductRating ratingToSave = new ProductRating();
+        ratingToSave.setUser(confirmedUser);
+        ratingToSave.setProduct(confirmedProduct);
+        ratingToSave.setRating(request.getRating());
 
         productRatingRepo.save(ratingToSave);
 

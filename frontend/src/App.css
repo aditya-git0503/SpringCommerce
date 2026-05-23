@@ -1,3 +1,16 @@
+:root {
+  --bg: #101314;
+  --surface: #171c1d;
+  --surface-2: #1d2425;
+  --border: #2c3638;
+  --text: #e7eded;
+  --muted: #b7c2c5;
+  --accent: #6db33f;
+  --accent-strong: #7ecb48;
+  --danger: #ff6b6b;
+  --success: #8eea73;
+}
+
 .page {
   width: min(1200px, 95%);
   margin: 20px auto;
@@ -10,46 +23,85 @@
 }
 
 .auth-card {
-  width: min(420px, 100%);
-  background: #ffffff;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  padding: 20px;
+  width: min(460px, 100%);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.auth-card h1 {
+  color: var(--text);
+  margin: 0 0 8px;
 }
 
 .auth-toggle {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   margin: 16px 0;
 }
 
 .auth-toggle button.active {
-  background: #111827;
-  color: #ffffff;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #071106;
+  font-weight: 700;
 }
 
 .form {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+}
+
+.form label {
+  color: var(--text);
+  font-weight: 600;
 }
 
 .form input,
 .form select,
 .filters-row input,
-.filters-row select {
-  padding: 8px;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
+.filters-row select,
+textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.form input::placeholder,
+.filters-row input::placeholder,
+textarea::placeholder {
+  color: #95a4a8;
+}
+
+.form input:focus,
+.form select:focus,
+.filters-row input:focus,
+.filters-row select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(109, 179, 63, 0.25);
 }
 
 .form button,
 button {
-  padding: 8px 10px;
-  border: 1px solid #1f2937;
-  background: #ffffff;
-  border-radius: 6px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  border-radius: 8px;
   cursor: pointer;
+  transition: 0.15s ease;
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent-strong);
 }
 
 button:disabled {
@@ -62,28 +114,34 @@ button:disabled {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  background: #ffffff;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  padding: 12px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
 }
 
 .top-nav h2,
 .top-nav p {
   margin: 0;
+  color: var(--text);
+}
+
+.top-nav p {
+  color: var(--muted);
 }
 
 .nav-actions {
   display: flex;
-  gap: 8px;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .status-box {
   margin-top: 12px;
-  padding: 10px;
-  background: #ffffff;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
+  padding: 10px 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
 }
 
 .products-layout {
@@ -96,16 +154,16 @@ button:disabled {
 .products-section,
 .cart-section,
 .order-card {
-  background: #ffffff;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
   padding: 14px;
 }
 
 .filters-row {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 8px;
+  gap: 10px;
 }
 
 .product-list {
@@ -116,9 +174,10 @@ button:disabled {
 }
 
 .product-card {
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
   padding: 10px;
+  background: #14191a;
 }
 
 .product-card img {
@@ -135,13 +194,15 @@ button:disabled {
 .order-card h3,
 .order-card p {
   margin: 8px 0;
+  color: var(--text);
 }
 
 .cart-item {
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
   padding: 10px;
   margin-bottom: 10px;
+  background: #14191a;
 }
 
 .cart-item-head {
@@ -153,14 +214,26 @@ button:disabled {
 .qty-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   margin: 8px 0;
+}
+
+.qty-row button {
+  min-width: 36px;
 }
 
 .checkout-box {
   margin-top: 12px;
-  border-top: 1px solid #d1d5db;
+  border-top: 1px solid var(--border);
   padding-top: 12px;
+}
+
+.checkout-box h4,
+.checkout-box p,
+.orders-page p,
+.products-page p,
+.auth-page p {
+  color: var(--text);
 }
 
 .address-option {
@@ -188,10 +261,11 @@ button:disabled {
 
 .order-item-row {
   display: flex;
-  gap: 8px;
-  border: 1px solid #e5e7eb;
+  gap: 10px;
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 8px;
+  background: #14191a;
 }
 
 .order-item-row img {
@@ -201,12 +275,47 @@ button:disabled {
   border-radius: 6px;
 }
 
+.order-item-row > div {
+  flex: 1;
+}
+
 .success-text {
-  color: #15803d;
+  color: var(--success);
+  font-style: italic;
 }
 
 .error-text {
-  color: #b91c1c;
+  color: var(--danger);
+  font-style: italic;
+}
+
+.notice-text {
+  font-style: italic;
+  color: var(--muted);
+}
+
+.password-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.password-row input {
+  flex: 1;
+}
+
+.password-toggle {
+  white-space: nowrap;
+  min-width: 70px;
+}
+
+.linkish-btn {
+  align-self: flex-start;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--accent);
 }
 
 @media (max-width: 900px) {
@@ -221,4 +330,72 @@ button:disabled {
   .product-list {
     grid-template-columns: 1fr;
   }
+}
+
+@media (max-width: 600px) {
+  .page {
+    width: min(1200px, 96%);
+  }
+
+  .auth-card,
+  .products-section,
+  .cart-section,
+  .order-card {
+    padding: 12px;
+  }
+
+  .top-nav {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .nav-actions {
+    width: 100%;
+  }
+
+  .nav-actions button {
+    flex: 1;
+  }
+
+  .order-item-row {
+    flex-direction: column;
+  }
+
+  .order-item-row img {
+    width: 100%;
+    height: 150px;
+  }
+}
+
+.cart-action-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.rating-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.rating-actions select {
+  min-width: 160px;
+}
+
+.scroll-top-btn {
+  position: fixed;
+  right: 18px;
+  bottom: 20px;
+  z-index: 30;
+  border-color: var(--accent);
+  color: var(--accent-strong);
+  background: var(--surface);
+}
+
+.scroll-top-btn:hover:not(:disabled) {
+  background: var(--surface-2);
 }

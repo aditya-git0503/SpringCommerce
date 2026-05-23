@@ -25,13 +25,15 @@ public class OrderService {
     private final UserRepo userRepo;
     private final AddressRepo addressRepo;
     private final ProductRepo productRepo;
+    private final ProductRatingRepo productRatingRepo;
 
     public OrderService(OrderRepo orderRepo,
                         OrderItemRepo orderItemRepo,
                         CartItemRepo cartItemRepo,
                         UserRepo userRepo,
                         AddressRepo addressRepo,
-                        ProductRepo productRepo) {
+                        ProductRepo productRepo,
+                        ProductRatingRepo productRatingRepo) {
 
         this.orderRepo = orderRepo;
         this.orderItemRepo = orderItemRepo;
@@ -39,9 +41,13 @@ public class OrderService {
         this.userRepo = userRepo;
         this.addressRepo = addressRepo;
         this.productRepo = productRepo;
+        this.productRatingRepo = productRatingRepo;
     }
 
-    private OrderItemResponseDTO mapOrderItemToDTO(OrderItem orderItem){
+    private OrderItemResponseDTO mapOrderItemToDTO(OrderItem orderItem, User user){
+        Integer userRating = productRatingRepo.findByUserAndProduct(user, orderItem.getProduct())
+                .map(ProductRating::getRating)
+                .orElse(null);
         return new OrderItemResponseDTO(
                 orderItem.getOrderItemId(),
                 orderItem.getProduct().getProductId(),
@@ -49,11 +55,12 @@ public class OrderService {
                 orderItem.getQuantity(),
                 orderItem.getPriceAtPurchase(),
                 orderItem.getImageUrl(),
-                orderItem.getDescription()
+                orderItem.getDescription(),
+                userRating
         );
     }
 
-    private OrderResponseDTO mapOrderToDTO(Orders order){
+    private OrderResponseDTO mapOrderToDTO(Orders order, User user){
         return new OrderResponseDTO(
                 order.getOrderId(),
                 order.getTotalAmountPaid(),
@@ -63,7 +70,7 @@ public class OrderService {
                 order.getAddress().getFullAddress(),
                 order.getOrderItems()
                         .stream()
-                        .map(this::mapOrderItemToDTO)
+                        .map(item -> mapOrderItemToDTO(item, user))
                         .toList()
         );
     }
@@ -170,9 +177,9 @@ public class OrderService {
             throw new ResourceNotFoundException("User not found");
         User confirmedUser = user.get();
 
-        return orderRepo.findByUser(confirmedUser)
+        return orderRepo.findOrdersWithItemsByUser(confirmedUser)
                 .stream()
-                .map(this :: mapOrderToDTO)
+                .map(order -> mapOrderToDTO(order, confirmedUser))
                 .toList();
     }
 }

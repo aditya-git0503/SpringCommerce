@@ -19,4 +19,5 @@ public class OrderItemResponseDTO {
 
     private String imageUrl;
     private String description;
+    private Integer userRating;
 }
