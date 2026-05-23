@@ -57,8 +57,8 @@ export default function OrdersPage() {
     return `${month}/${day}/${year}, ${displayHour}:${minute} ${meridian}`;
   }
 
-  async function handleRatingSubmit(productId) {
-  const selectedValue = ratingInputs[productId];
+  async function handleRatingSubmit(productId, orderItemId) {
+  const selectedValue = ratingInputs[orderItemId];
 
   if (!selectedValue) {
     setRatingMessage("Please select a rating first");
@@ -68,6 +68,7 @@ export default function OrdersPage() {
   try {
     await api.post("/ratings", {
       productId: productId,
+      orderItemId: orderItemId,
       rating: Number(selectedValue),
     });
 
@@ -75,7 +76,7 @@ export default function OrdersPage() {
 
     setRatingInputs((prev) => ({
       ...prev,
-      [productId]: "",
+      [orderItemId]: "",
     }));
 
     await loadOrders();
@@ -130,11 +131,11 @@ export default function OrdersPage() {
                     ) : (
                       <div className="rating-actions">
                         <select
-                          value={ratingInputs[item.productId] || ""}
+                          value={ratingInputs[item.orderItemId] || ""}
                           onChange={(event) =>
                             setRatingInputs((prev) => ({
                               ...prev,
-                              [item.productId]: event.target.value,
+                              [item.orderItemId]: event.target.value,
                             }))
                           }
                         >
@@ -145,7 +146,7 @@ export default function OrdersPage() {
                           <option value="4">4</option>
                           <option value="5">5</option>
                         </select>
-                        <button type="button" onClick={() => handleRatingSubmit(item.productId)}>
+                        <button type="button" onClick={() => handleRatingSubmit(item.productId, item.orderItemId)}>
                           Submit Rating
                         </button>
                       </div>

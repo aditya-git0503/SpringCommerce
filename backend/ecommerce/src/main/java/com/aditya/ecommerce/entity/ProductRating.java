@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
-@Table(name = "product_ratings", uniqueConstraints = @UniqueConstraint(columnNames = { "user_id", "product_id" }))
+@Table(name = "product_ratings", uniqueConstraints = @UniqueConstraint(columnNames = { "order_item_id" }))
 public class ProductRating {
 
     @Id
@@ -25,6 +25,10 @@ public class ProductRating {
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
+
+    @OneToOne
+    @JoinColumn(name = "order_item_id", nullable = false)
+    private OrderItem orderItem;
 
     @Min(1)
     @Max(5)

@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class RateProductRequestDTO {
     private int productId;
+    private int orderItemId;
 
     @Min(1)
     @Max(5)

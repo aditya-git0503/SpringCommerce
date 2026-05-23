@@ -1,3 +1,12 @@
+ALTER TABLE product_ratings
+DROP CONSTRAINT IF EXISTS product_ratings_user_id_product_id_key;
+
+ALTER TABLE product_ratings
+DROP CONSTRAINT IF EXISTS ukc04atldbsnfhinkgdytimcpt5;
+
+CREATE UNIQUE INDEX IF NOT EXISTS ux_product_ratings_order_item_id
+ON product_ratings(order_item_id);
+
 TRUNCATE TABLE products RESTART IDENTITY CASCADE;
 
 INSERT INTO products

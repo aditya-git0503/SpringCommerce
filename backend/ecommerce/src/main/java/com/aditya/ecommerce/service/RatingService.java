@@ -8,10 +8,8 @@ import com.aditya.ecommerce.exception.ResourceNotFoundException;
 import com.aditya.ecommerce.repo.*;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 @Service
 public class RatingService {
@@ -19,42 +17,38 @@ public class RatingService {
     private final UserRepo userRepo;
     private final ProductRepo productRepo;
     private final OrderRepo orderRepo;
+    private final OrderItemRepo orderItemRepo;
 
-    public RatingService(ProductRatingRepo productRatingRepo, UserRepo userRepo, ProductRepo productRepo, OrderRepo orderRepo) {
+    public RatingService(ProductRatingRepo productRatingRepo, UserRepo userRepo, ProductRepo productRepo, OrderRepo orderRepo, OrderItemRepo orderItemRepo) {
         this.productRatingRepo = productRatingRepo;
         this.userRepo = userRepo;
         this.productRepo = productRepo;
         this.orderRepo = orderRepo;
+        this.orderItemRepo = orderItemRepo;
     }
 
     public void rateProduct(String email, RateProductRequestDTO request){
         User confirmedUser = userRepo.findByUserEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found"));
         Product confirmedProduct = productRepo.findById(request.getProductId()).orElseThrow(() -> new ResourceNotFoundException("Product not found"));
-        List<Orders> orders = orderRepo.findByUser(confirmedUser);
+        OrderItem confirmedOrderItem = orderItemRepo.findById(request.getOrderItemId())
+                .orElseThrow(() -> new ResourceNotFoundException("Order item not found"));
 
-        boolean hasPurchased = false;
-        for(Orders o : orders){
-            for(OrderItem item : o.getOrderItems()){
-                if(item.getProduct().getProductId() == confirmedProduct.getProductId()){
-                    hasPurchased = true;
-                    break;
-                }
-            }
-            if(hasPurchased)
-                break;
+        if (confirmedOrderItem.getOrder().getUser().getUserid() != confirmedUser.getUserid()) {
+            throw new ForbiddenException("You can rate only your own purchased product");
         }
 
-        if(!hasPurchased){
-            throw new ForbiddenException("You can rate only purchased products!");
+        if (confirmedOrderItem.getProduct().getProductId() != confirmedProduct.getProductId()) {
+            throw new ForbiddenException("Selected order item does not match this product");
         }
 
-        Optional<ProductRating> existingRating = productRatingRepo.findByUserAndProduct(confirmedUser, confirmedProduct);
+        Optional<ProductRating> existingRating = productRatingRepo.findByOrderItem(confirmedOrderItem);
         if(existingRating.isPresent()){
-            throw new ConflictException("You have already rated this product");
+            throw new ConflictException("You have already rated this purchase");
         }
         ProductRating ratingToSave = new ProductRating();
         ratingToSave.setUser(confirmedUser);
         ratingToSave.setProduct(confirmedProduct);
+        ratingToSave.setOrderItem(confirmedOrderItem);
         ratingToSave.setRating(request.getRating());
 
         productRatingRepo.save(ratingToSave);
@@ -74,7 +68,7 @@ public class RatingService {
         confirmedProduct.setAvgRating(avg);
 
         List<Orders> allOrders = orderRepo.findAll();
-        Set<Integer> buyerIds = new HashSet<>();
+        int totalBuys = 0;
 
         for(Orders o : allOrders){
             boolean boughtThis = false;
@@ -87,10 +81,10 @@ public class RatingService {
             }
 
             if(boughtThis)
-                buyerIds.add(o.getUser().getUserid());
+                totalBuys++;
 
         }
-        confirmedProduct.setTotalBuyers(buyerIds.size());
+        confirmedProduct.setTotalBuyers(totalBuys);
         productRepo.save(confirmedProduct);
     }
 }

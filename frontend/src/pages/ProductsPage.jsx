@@ -286,7 +286,7 @@ export default function ProductsPage() {
               value={category}
               onChange={(event) => setCategory(event.target.value)}
             >
-              <option value="">All Categories</option>
+              <option value="">Categories</option>
               {categories.map((cat) => (
                 <option key={cat} value={cat}>
                   {cat}
@@ -317,9 +317,9 @@ export default function ProductsPage() {
               onChange={(event) => setRatingFilter(event.target.value)}
             >
               <option value="">All Ratings</option>
-              <option value="4">4★ & above</option>
-              <option value="3">3★ & above</option>
-              <option value="2">2★ & above</option>
+              <option value="4">4 & above</option>
+              <option value="3">3 & above</option>
+              <option value="2">2 & above</option>
             </select>
           </div>
 
@@ -336,7 +336,7 @@ export default function ProductsPage() {
                 <h3>{product.productName}</h3>
                 <p>Price: ₹{product.price}</p>
                 <p>Stock: {product.stockAmount}</p>
-                <p>Rating: {product.avgRating}</p>
+                <p>Rating: {product.avgRating} ({product.totalBuyers})</p>
                 <p>{product.description}</p>
                 <button
                   type="button"

@@ -13,8 +13,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class OrderService {
@@ -45,7 +47,7 @@ public class OrderService {
     }
 
     private OrderItemResponseDTO mapOrderItemToDTO(OrderItem orderItem, User user){
-        Integer userRating = productRatingRepo.findByUserAndProduct(user, orderItem.getProduct())
+        Integer userRating = productRatingRepo.findByOrderItem(orderItem)
                 .map(ProductRating::getRating)
                 .orElse(null);
         return new OrderItemResponseDTO(
@@ -119,6 +121,7 @@ public class OrderService {
         float amount = 0;
 
         List<OrderItem> orderItems = new ArrayList<>();
+        Set<Product> updatedProducts = new HashSet<>();
 
         for (CartItem c : cartItems) {
 
@@ -141,6 +144,7 @@ public class OrderService {
             );
 
             productRepo.save(product);
+            updatedProducts.add(product);
 
             OrderItem orderItem = new OrderItem();
 
@@ -165,6 +169,11 @@ public class OrderService {
         order.setOrderItems(orderItems);
 
         orderRepo.save(order);
+
+        for (Product product : updatedProducts) {
+            product.setTotalBuyers(product.getTotalBuyers() + 1);
+            productRepo.save(product);
+        }
 
         cartItemRepo.deleteAll(cartItems);
 
