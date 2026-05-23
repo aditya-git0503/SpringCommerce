@@ -36,4 +36,19 @@ public class Orders {
     private LocalDateTime orderDate;
 
     private String status;
+
+    @Column(name = "delivery_full_address")
+    private String deliveryFullAddress;
+
+    @Column(name = "delivery_city")
+    private String deliveryCity;
+
+    @Column(name = "delivery_state")
+    private String deliveryState;
+
+    @Column(name = "delivery_pincode")
+    private Integer deliveryPincode;
+
+    @Column(name = "delivery_landmark")
+    private String deliveryLandmark;
 }

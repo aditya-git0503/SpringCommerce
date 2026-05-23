@@ -25,5 +25,5 @@ public interface OrderRepo extends JpaRepository<Orders, Integer> {
 
     List<Orders> findByUser(User user);
 
-    boolean existsByAddress(Address address);
+    List<Orders> findByAddress(Address address);
 }

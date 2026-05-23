@@ -10,105 +10,43 @@ ON product_ratings(order_item_id);
 INSERT INTO products
 (product_id, product_name, price, stock_amount, image_url, total_buyers, avg_rating, rating_count, description, category)
 VALUES
-    (1, 'iPhone 15 Pro', 129999, 12,
-     'https://images.unsplash.com/photo-1695048133142-1a20484d2569',
-     0, 0.0, 0,
-     'Flagship Apple smartphone with A17 Pro chip',
-     'Mobile'),
+    (1, 'iPhone 15 Pro', 129999, 12, '/images/products/iphone-15-pro.svg', 0, 0.0, 0, 'Flagship Apple smartphone with A17 Pro chip', 'Mobile'),
+    (2, 'Samsung Galaxy S24 Ultra', 119999, 9, '/images/products/galaxy-s24-ultra.svg', 0, 0.0, 0, 'Premium Samsung smartphone with powerful camera setup', 'Mobile'),
+    (3, 'Sony WH-1000XM5 Headphones', 29999, 20, '/images/products/sony-wh-1000xm5.svg', 0, 0.0, 0, 'Industry-leading wireless noise cancelling headphones', 'Electronics'),
+    (4, 'Nike Air Max Pulse', 8999, 25, '/images/products/nike-air-max-pulse.svg', 0, 0.0, 0, 'Comfortable lifestyle sneakers for daily wear', 'Fashion'),
+    (5, 'Dell XPS 15 Laptop', 164999, 6, '/images/products/dell-xps-15.svg', 0, 0.0, 0, 'High-performance laptop for creators and developers', 'Electronics'),
+    (6, 'Wooden Study Table', 14999, 15, '/images/products/wooden-study-table.svg', 0, 0.0, 0, 'Minimal modern wooden study desk', 'Household'),
+    (7, 'Canon EOS R50 Camera', 78999, 8, '/images/products/canon-eos-r50.svg', 0, 0.0, 0, 'Compact mirrorless camera for photography enthusiasts', 'Electronics'),
+    (8, 'Puma Sports Hoodie', 3499, 40, '/images/products/puma-sports-hoodie.svg', 0, 0.0, 0, 'Comfortable cotton blend sports hoodie', 'Fashion'),
+    (9, 'Apple Watch Series 9', 45999, 18, '/images/products/apple-watch-series-9.svg', 0, 0.0, 0, 'Advanced smartwatch with fitness tracking', 'Electronics'),
+    (10, 'Gaming Mechanical Keyboard', 5499, 30, '/images/products/gaming-keyboard.svg', 0, 0.0, 0, 'RGB mechanical keyboard with tactile switches', 'Electronics'),
+    (11, 'Adidas Football', 1999, 50, '/images/products/adidas-football.svg', 0, 0.0, 0, 'Professional training football for outdoor matches', 'Equipment'),
+    (12, 'LG OLED Smart TV 55-inch', 89999, 5, '/images/products/lg-oled-tv.svg', 0, 0.0, 0, '4K Ultra HD OLED Smart Television', 'Electronics'),
+    (13, 'Instant Coffee Jar', 499, 100, '/images/products/instant-coffee-jar.svg', 0, 0.0, 0, 'Premium instant coffee powder', 'Household'),
+    (14, 'HP Wireless Mouse', 1299, 75, '/images/products/hp-wireless-mouse.svg', 0, 0.0, 0, 'Ergonomic wireless mouse for office use', 'Electronics'),
+    (15, 'Levis Denim Jacket', 4999, 22, '/images/products/levis-denim-jacket.svg', 0, 0.0, 0, 'Classic blue denim jacket for casual outfits', 'Fashion')
+ON CONFLICT (product_id) DO NOTHING;
 
-    (2, 'Samsung Galaxy S24 Ultra', 119999, 9,
-     'https://images.unsplash.com/photo-1610945265064-0e34e5519bbf',
-     0, 0.0, 0,
-     'Premium Samsung smartphone with powerful camera setup',
-     'Mobile'),
-
-    (3, 'Sony WH-1000XM5 Headphones', 29999, 20,
-     'https://images.unsplash.com/photo-1505740420928-5e560c06d30e',
-     0, 0.0, 0,
-     'Industry-leading wireless noise cancelling headphones',
-     'Electronics'),
-
-    (4, 'Nike Air Max Pulse', 8999, 25,
-     'https://images.unsplash.com/photo-1542291026-7eec264c27ff',
-     0, 0.0, 0,
-     'Comfortable lifestyle sneakers for daily wear',
-     'Fashion'),
-
-    (5, 'Dell XPS 15 Laptop', 164999, 6,
-     'https://images.unsplash.com/photo-1496181133206-80ce9b88a853',
-     0, 0.0, 0,
-     'High-performance laptop for creators and developers',
-     'Electronics'),
-
-    (6, 'Wooden Study Table', 14999, 15,
-     'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85',
-     0, 0.0, 0,
-     'Minimal modern wooden study desk',
-     'Household'),
-
-    (7, 'Canon EOS R50 Camera', 78999, 8,
-     'https://images.unsplash.com/photo-1516035069371-29a1b244cc32',
-     0, 0.0, 0,
-     'Compact mirrorless camera for photography enthusiasts',
-     'Electronics'),
-
-    (8, 'Puma Sports Hoodie', 3499, 40,
-     'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab',
-     0, 0.0, 0,
-     'Comfortable cotton blend sports hoodie',
-     'Fashion'),
-
-    (9, 'Apple Watch Series 9', 45999, 18,
-     'https://images.unsplash.com/photo-1517430816045-df4b7de11d1d',
-     0, 0.0, 0,
-     'Advanced smartwatch with fitness tracking',
-     'Electronics'),
-
-    (10, 'Gaming Mechanical Keyboard', 5499, 30,
-     'https://images.unsplash.com/photo-1511467687858-23d96c32e4ae',
-     0, 0.0, 0,
-     'RGB mechanical keyboard with tactile switches',
-     'Electronics'),
-
-    (11, 'Adidas Football', 1999, 50,
-     'https://images.unsplash.com/photo-1517466787929-bc90951d0974',
-     0, 0.0, 0,
-     'Professional training football for outdoor matches',
-     'Equipment'),
-
-    (12, 'LG OLED Smart TV 55-inch', 89999, 5,
-     'https://images.unsplash.com/photo-1593784991095-a205069470b6',
-     0, 0.0, 0,
-     '4K Ultra HD OLED Smart Television',
-     'Electronics'),
-
-    (13, 'Instant Coffee Jar', 499, 100,
-     'https://images.unsplash.com/photo-1495474472287-4d71bcdd2085',
-     0, 0.0, 0,
-     'Premium instant coffee powder',
-     'Household'),
-
-    (14, 'HP Wireless Mouse', 1299, 75,
-     'https://images.unsplash.com/photo-1527814050087-3793815479db',
-     0, 0.0, 0,
-     'Ergonomic wireless mouse for office use',
-     'Electronics'),
-
-    (15, 'Levis Denim Jacket', 4999, 22,
-     'https://images.unsplash.com/photo-1523398002811-999ca8dec234',
-     0, 0.0, 0,
-     'Classic blue denim jacket for casual outfits',
-     'Fashion')
-ON CONFLICT (product_id) DO UPDATE SET
-    product_name = EXCLUDED.product_name,
-    price = EXCLUDED.price,
-    stock_amount = EXCLUDED.stock_amount,
-    image_url = EXCLUDED.image_url,
-    total_buyers = EXCLUDED.total_buyers,
-    avg_rating = EXCLUDED.avg_rating,
-    rating_count = EXCLUDED.rating_count,
-    description = EXCLUDED.description,
-    category = EXCLUDED.category;
+UPDATE products
+SET image_url = CASE product_id
+    WHEN 1 THEN '/images/products/iphone-15-pro.svg'
+    WHEN 2 THEN '/images/products/galaxy-s24-ultra.svg'
+    WHEN 3 THEN '/images/products/sony-wh-1000xm5.svg'
+    WHEN 4 THEN '/images/products/nike-air-max-pulse.svg'
+    WHEN 5 THEN '/images/products/dell-xps-15.svg'
+    WHEN 6 THEN '/images/products/wooden-study-table.svg'
+    WHEN 7 THEN '/images/products/canon-eos-r50.svg'
+    WHEN 8 THEN '/images/products/puma-sports-hoodie.svg'
+    WHEN 9 THEN '/images/products/apple-watch-series-9.svg'
+    WHEN 10 THEN '/images/products/gaming-keyboard.svg'
+    WHEN 11 THEN '/images/products/adidas-football.svg'
+    WHEN 12 THEN '/images/products/lg-oled-tv.svg'
+    WHEN 13 THEN '/images/products/instant-coffee-jar.svg'
+    WHEN 14 THEN '/images/products/hp-wireless-mouse.svg'
+    WHEN 15 THEN '/images/products/levis-denim-jacket.svg'
+    ELSE image_url
+END
+WHERE product_id BETWEEN 1 AND 15;
 
 SELECT setval(
     pg_get_serial_sequence('products', 'product_id'),

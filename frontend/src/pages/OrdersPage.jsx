@@ -12,6 +12,14 @@ export default function OrdersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [editingOrderId, setEditingOrderId] = useState(null);
+  const [deliveryForm, setDeliveryForm] = useState({
+    fullAddress: "",
+    city: "",
+    state: "",
+    pincode: "",
+    landmark: "",
+  });
 
   const [ratingInputs, setRatingInputs] = useState({}); 
   const [ratingMessage, setRatingMessage] = useState(""); 
@@ -72,6 +80,67 @@ export default function OrdersPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  function formatStatus(status) {
+    if (!status) {
+      return "";
+    }
+    return status.replaceAll("_", " ");
+  }
+
+  function formatDeliveryAddress(order) {
+    const parts = [];
+    if (order.fullAddress) parts.push(order.fullAddress);
+    if (order.city) parts.push(order.city);
+    if (order.state) parts.push(order.state);
+    let text = parts.join(", ");
+    if (order.pincode) {
+      text += `${text ? " - " : ""}${order.pincode}`;
+    }
+    if (order.landmark) {
+      text += ` (${order.landmark})`;
+    }
+    return text || "Address unavailable";
+  }
+
+  function startAddressEdit(order) {
+    setEditingOrderId(order.orderId);
+    setDeliveryForm({
+      fullAddress: order.fullAddress || "",
+      city: order.city || "",
+      state: order.state || "",
+      pincode: order.pincode ? String(order.pincode) : "",
+      landmark: order.landmark || "",
+    });
+  }
+
+  function cancelAddressEdit() {
+    setEditingOrderId(null);
+    setDeliveryForm({
+      fullAddress: "",
+      city: "",
+      state: "",
+      pincode: "",
+      landmark: "",
+    });
+  }
+
+  async function saveDeliveryAddress(orderId) {
+    try {
+      await api.put(`/orders/${orderId}/address`, {
+        fullAddress: deliveryForm.fullAddress,
+        city: deliveryForm.city,
+        state: deliveryForm.state,
+        pincode: Number(deliveryForm.pincode),
+        landmark: deliveryForm.landmark || null,
+      });
+      setRatingMessage("Delivery address updated successfully");
+      cancelAddressEdit();
+      await loadOrders();
+    } catch (err) {
+      setRatingMessage(getApiErrorMessage(err, "Failed to update delivery address"));
+    }
+  }
+
   async function handleRatingSubmit(productId, orderItemId) {
   const selectedValue = ratingInputs[orderItemId];
 
@@ -126,10 +195,93 @@ export default function OrdersPage() {
         {orders.map((order) => (
           <article key={order.orderId} className="order-card">
             <h3>Order #{order.orderId}</h3>
-            <p>Status: {order.status}</p>
+            <p>Status: {formatStatus(order.status)}</p>
             <p>Amount Paid: ₹{order.totalAmountPaid}</p>
             <p>Placed On: {formatOrderDate(order.orderDate)}</p>
-            <p>Delivery Address: {order.fullAddress}</p>
+            <p>Delivery Address: {formatDeliveryAddress(order)}</p>
+
+            {order.status === "PLACED" && editingOrderId !== order.orderId && (
+              <button type="button" onClick={() => startAddressEdit(order)}>
+                Edit Delivery Address
+              </button>
+            )}
+
+            {editingOrderId === order.orderId && (
+              <div className="order-address-edit">
+                <input
+                  type="text"
+                  placeholder="Full Address"
+                  value={deliveryForm.fullAddress}
+                  onChange={(event) =>
+                    setDeliveryForm((prev) => ({
+                      ...prev,
+                      fullAddress: event.target.value,
+                    }))
+                  }
+                />
+                <input
+                  type="text"
+                  placeholder="City"
+                  value={deliveryForm.city}
+                  onChange={(event) =>
+                    setDeliveryForm((prev) => ({
+                      ...prev,
+                      city: event.target.value,
+                    }))
+                  }
+                />
+                <input
+                  type="text"
+                  placeholder="State"
+                  value={deliveryForm.state}
+                  onChange={(event) =>
+                    setDeliveryForm((prev) => ({
+                      ...prev,
+                      state: event.target.value,
+                    }))
+                  }
+                />
+                <input
+                  type="text"
+                  placeholder="Pincode"
+                  value={deliveryForm.pincode}
+                  onChange={(event) =>
+                    setDeliveryForm((prev) => ({
+                      ...prev,
+                      pincode: event.target.value,
+                    }))
+                  }
+                />
+                <input
+                  type="text"
+                  placeholder="Landmark (optional)"
+                  value={deliveryForm.landmark}
+                  onChange={(event) =>
+                    setDeliveryForm((prev) => ({
+                      ...prev,
+                      landmark: event.target.value,
+                    }))
+                  }
+                />
+                <div className="order-address-actions">
+                  <button
+                    type="button"
+                    onClick={() => saveDeliveryAddress(order.orderId)}
+                    disabled={
+                      deliveryForm.fullAddress.trim() === "" ||
+                      deliveryForm.city.trim() === "" ||
+                      deliveryForm.state.trim() === "" ||
+                      !/^[0-9]{6}$/.test(deliveryForm.pincode)
+                    }
+                  >
+                    Save Address
+                  </button>
+                  <button type="button" onClick={cancelAddressEdit}>
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
 
             <div className="order-items">
               {order.orderItems.map((item) => (

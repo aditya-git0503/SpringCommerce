@@ -3,6 +3,7 @@ package com.aditya.ecommerce.service;
 import com.aditya.ecommerce.dto.order.OrderItemResponseDTO;
 import com.aditya.ecommerce.dto.order.OrderResponseDTO;
 import com.aditya.ecommerce.dto.order.PlaceOrderRequestDTO;
+import com.aditya.ecommerce.dto.order.UpdateOrderAddressRequestDTO;
 import com.aditya.ecommerce.entity.*;
 import com.aditya.ecommerce.exception.BadRequestException;
 import com.aditya.ecommerce.exception.ConflictException;
@@ -17,6 +18,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 public class OrderService {
@@ -63,13 +65,34 @@ public class OrderService {
     }
 
     private OrderResponseDTO mapOrderToDTO(Orders order, User user){
+        String fullAddress = order.getDeliveryFullAddress();
+        String city = order.getDeliveryCity();
+        String state = order.getDeliveryState();
+        Integer pincode = order.getDeliveryPincode();
+        String landmark = order.getDeliveryLandmark();
+        Integer addressId = null;
+
+        // Backward compatibility for old orders that were created before snapshot fields existed.
+        if ((fullAddress == null || fullAddress.isBlank()) && order.getAddress() != null) {
+            fullAddress = order.getAddress().getFullAddress();
+            city = order.getAddress().getCity();
+            state = order.getAddress().getState();
+            pincode = order.getAddress().getPincode();
+            landmark = order.getAddress().getLandmark();
+            addressId = order.getAddress().getAddressId();
+        }
+
         return new OrderResponseDTO(
                 order.getOrderId(),
                 order.getTotalAmountPaid(),
                 order.getOrderDate(),
                 order.getStatus(),
-                order.getAddress().getAddressId(),
-                order.getAddress().getFullAddress(),
+                addressId,
+                fullAddress,
+                city,
+                state,
+                pincode,
+                landmark,
                 order.getOrderItems()
                         .stream()
                         .map(item -> mapOrderItemToDTO(item, user))
@@ -116,7 +139,12 @@ public class OrderService {
         order.setUser(confirmedUser);
         order.setAddress(confirmedAddress);
         order.setOrderDate(LocalDateTime.now());
-        order.setStatus("PLACED");
+        order.setStatus(pickRandomOrderStatus());
+        order.setDeliveryFullAddress(confirmedAddress.getFullAddress());
+        order.setDeliveryCity(confirmedAddress.getCity());
+        order.setDeliveryState(confirmedAddress.getState());
+        order.setDeliveryPincode(confirmedAddress.getPincode());
+        order.setDeliveryLandmark(confirmedAddress.getLandmark());
 
         float amount = 0;
 
@@ -170,6 +198,9 @@ public class OrderService {
 
         orderRepo.save(order);
 
+        confirmedAddress.setLastUsedAt(LocalDateTime.now());
+        addressRepo.save(confirmedAddress);
+
         for (Product product : updatedProducts) {
             product.setTotalBuyers(product.getTotalBuyers() + 1);
             productRepo.save(product);
@@ -190,5 +221,46 @@ public class OrderService {
                 .stream()
                 .map(order -> mapOrderToDTO(order, confirmedUser))
                 .toList();
+    }
+
+    public String updateOrderDeliveryAddress(String email, int orderId, UpdateOrderAddressRequestDTO request) {
+        User confirmedUser = userRepo.findByUserEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        Orders confirmedOrder = orderRepo.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Order not found"));
+
+        if (confirmedOrder.getUser().getUserid() != confirmedUser.getUserid()) {
+            throw new ForbiddenException("You can edit only your own order");
+        }
+
+        if (!"PLACED".equalsIgnoreCase(confirmedOrder.getStatus())) {
+            throw new ConflictException("Delivery address can be changed only when order is PLACED");
+        }
+
+        if (request.getFullAddress() == null || request.getFullAddress().isBlank() ||
+                request.getCity() == null || request.getCity().isBlank() ||
+                request.getState() == null || request.getState().isBlank() ||
+                request.getPincode() == null) {
+            throw new BadRequestException("Please provide full delivery address details");
+        }
+
+        confirmedOrder.setDeliveryFullAddress(request.getFullAddress().trim());
+        confirmedOrder.setDeliveryCity(request.getCity().trim());
+        confirmedOrder.setDeliveryState(request.getState().trim());
+        confirmedOrder.setDeliveryPincode(request.getPincode());
+        confirmedOrder.setDeliveryLandmark(
+                request.getLandmark() == null || request.getLandmark().isBlank()
+                        ? null
+                        : request.getLandmark().trim()
+        );
+
+        orderRepo.save(confirmedOrder);
+        return "Delivery address updated successfully";
+    }
+
+    private String pickRandomOrderStatus() {
+        String[] statuses = {"PLACED", "IN_TRANSIT", "DELIVERED"};
+        return statuses[ThreadLocalRandom.current().nextInt(statuses.length)];
     }
 }

@@ -9,5 +9,5 @@ import java.util.List;
 
 @Repository
 public interface AddressRepo extends JpaRepository<Address, Integer> {
-    List<Address> findByUser(User user);
+    List<Address> findByUserOrderByLastUsedAtDescAddressIdDesc(User user);
 }

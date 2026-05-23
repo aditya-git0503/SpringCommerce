@@ -2,6 +2,7 @@ package com.aditya.ecommerce.controller;
 
 import com.aditya.ecommerce.dto.order.OrderResponseDTO;
 import com.aditya.ecommerce.dto.order.PlaceOrderRequestDTO;
+import com.aditya.ecommerce.dto.order.UpdateOrderAddressRequestDTO;
 import com.aditya.ecommerce.service.OrderService;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -32,5 +33,13 @@ public class OrderController {
                 SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
         return orderService.getUserOrders(email);
+    }
+
+    @PutMapping("/orders/{orderId}/address")
+    public String updateOrderDeliveryAddress(@PathVariable int orderId, @RequestBody UpdateOrderAddressRequestDTO request) {
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        return orderService.updateOrderDeliveryAddress(email, orderId, request);
     }
 }

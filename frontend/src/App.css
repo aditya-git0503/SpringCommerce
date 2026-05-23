@@ -330,6 +330,18 @@ button:disabled {
   flex: 1;
 }
 
+.order-address-edit {
+  margin-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.order-address-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .success-text {
   color: var(--success);
   font-style: italic;

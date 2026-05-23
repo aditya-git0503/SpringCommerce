@@ -15,7 +15,11 @@ public class OrderResponseDTO {
     private float totalAmountPaid;
     private LocalDateTime orderDate;
     private String status;
-    private int addressId;
+    private Integer addressId;
     private String fullAddress;
+    private String city;
+    private String state;
+    private Integer pincode;
+    private String landmark;
     private List<OrderItemResponseDTO> orderItems;
 }

@@ -2,8 +2,8 @@ package com.aditya.ecommerce.service;
 
 import com.aditya.ecommerce.dto.address.AddressResponseDTO;
 import com.aditya.ecommerce.entity.Address;
+import com.aditya.ecommerce.entity.Orders;
 import com.aditya.ecommerce.entity.User;
-import com.aditya.ecommerce.exception.ConflictException;
 import com.aditya.ecommerce.exception.ForbiddenException;
 import com.aditya.ecommerce.exception.ResourceNotFoundException;
 import com.aditya.ecommerce.repo.AddressRepo;
@@ -51,7 +51,7 @@ public class AddressService {
         if(!user.isPresent())
             throw new ResourceNotFoundException("No such user");
         User confirmedUser = user.get();
-        return addressRepo.findByUser(confirmedUser)
+        return addressRepo.findByUserOrderByLastUsedAtDescAddressIdDesc(confirmedUser)
                 .stream()
                 .map(this::mapToDTO)
                 .toList();
@@ -89,8 +89,27 @@ public class AddressService {
             throw new ForbiddenException("You can delete only your own address");
         }
 
-        if (orderRepo.existsByAddress(confirmedAddress)) {
-            throw new ConflictException("This address is used in an order and cannot be deleted");
+        List<Orders> linkedOrders = orderRepo.findByAddress(confirmedAddress);
+        if (!linkedOrders.isEmpty()) {
+            for (Orders order : linkedOrders) {
+                if (order.getDeliveryFullAddress() == null || order.getDeliveryFullAddress().isBlank()) {
+                    order.setDeliveryFullAddress(confirmedAddress.getFullAddress());
+                }
+                if (order.getDeliveryCity() == null || order.getDeliveryCity().isBlank()) {
+                    order.setDeliveryCity(confirmedAddress.getCity());
+                }
+                if (order.getDeliveryState() == null || order.getDeliveryState().isBlank()) {
+                    order.setDeliveryState(confirmedAddress.getState());
+                }
+                if (order.getDeliveryPincode() == null) {
+                    order.setDeliveryPincode(confirmedAddress.getPincode());
+                }
+                if (order.getDeliveryLandmark() == null || order.getDeliveryLandmark().isBlank()) {
+                    order.setDeliveryLandmark(confirmedAddress.getLandmark());
+                }
+                order.setAddress(null);
+            }
+            orderRepo.saveAll(linkedOrders);
         }
 
         addressRepo.delete(confirmedAddress);
