@@ -50,7 +50,9 @@ export default function ProductsPage() {
     try {
       setLoadingProducts(true);
       const response = await api.get("/products");
-      setProducts(response.data);
+      setProducts(
+        [...response.data].sort((a, b) => a.productId - b.productId),
+      );
     } catch (err) {
       setActionError(getApiErrorMessage(err, "Unable to fetch products"));
     } finally {
@@ -63,11 +65,17 @@ export default function ProductsPage() {
       setLoadingCart(true);
       const response = await api.get("/cart");
       const items = response.data;
+      const previousCartIds = cartItems.map((item) => item.cartId);
+      const currentCartIds = items.map((item) => item.cartId);
+      const newCartIds = currentCartIds.filter(
+        (id) => !previousCartIds.includes(id),
+      );
       setCartItems(items);
       setSelectedItems((prevSelected) => {
-        const validIds = items.map((item) => item.cartId);
-        const filtered = prevSelected.filter((id) => validIds.includes(id));
-        return filtered.length === 0 ? validIds : filtered;
+        const stillValidIds = prevSelected.filter((id) =>
+          currentCartIds.includes(id),
+        );
+        return [...new Set([...stillValidIds, ...newCartIds])];
       });
     } catch (err) {
       setActionError(getApiErrorMessage(err, "Unable to fetch cart items"));
@@ -210,7 +218,7 @@ export default function ProductsPage() {
     if (sortOrder === "highToLow") {
       return cloned.sort((a, b) => b.price - a.price);
     }
-    return cloned;
+    return cloned.sort((a, b) => a.productId - b.productId);
   }, [filteredProducts, sortOrder]);
 
   const selectedTotal = cartItems
@@ -398,6 +406,18 @@ export default function ProductsPage() {
           >
             Checkout
           </button>
+          {showCheckout && (
+            <button
+              type="button"
+              onClick={() => {
+                setShowCheckout(false);
+                setActionError("");
+                setActionSuccess("");
+              }}
+            >
+              Edit Cart
+            </button>
+          )}
 
           {showCheckout && (
             <div className="checkout-box">
