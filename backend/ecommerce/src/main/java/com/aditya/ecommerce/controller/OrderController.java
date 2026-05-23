@@ -3,7 +3,8 @@ package com.aditya.ecommerce.controller;
 import com.aditya.ecommerce.dto.order.OrderResponseDTO;
 import com.aditya.ecommerce.dto.order.PlaceOrderRequestDTO;
 import com.aditya.ecommerce.service.OrderService;
-import org.springframework.aop.target.LazyInitTargetSource;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,11 +20,17 @@ public class OrderController {
 
     @PostMapping("/order/place")
     public String placeOrder(@RequestBody PlaceOrderRequestDTO request) throws Exception{
-        return orderService.placeOrder(request);
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        return orderService.placeOrder(email, request);
     }
 
     @GetMapping("/orders")
-    public List<OrderResponseDTO> getOrders(@RequestParam int userId) throws Exception {
-        return orderService.getUserOrders(userId);
+    public List<OrderResponseDTO> getOrders() throws Exception {
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        return orderService.getUserOrders(email);
     }
 }

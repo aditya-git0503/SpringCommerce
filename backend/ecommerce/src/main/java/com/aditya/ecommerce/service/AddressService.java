@@ -1,14 +1,12 @@
 package com.aditya.ecommerce.service;
 
-import com.aditya.ecommerce.dto.AddressResponseDTO;
+import com.aditya.ecommerce.dto.address.AddressResponseDTO;
 import com.aditya.ecommerce.entity.Address;
 import com.aditya.ecommerce.entity.User;
 import com.aditya.ecommerce.repo.AddressRepo;
 import com.aditya.ecommerce.repo.UserRepo;
-import jdk.dynalink.linker.LinkerServices;
 import org.springframework.stereotype.Service;
 
-import javax.swing.text.html.Option;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,8 +30,8 @@ public class AddressService {
                 );
     }
 
-    public String addAddress(int userId, Address address) throws Exception {
-        Optional<User> user = userRepo.findById(userId);
+    public String addAddress(String email, Address address) throws Exception {
+        Optional<User> user = userRepo.findByUserEmail(email);
         if(!user.isPresent())
             throw new Exception("User not present");
         User confirmedUser = user.get();
@@ -42,8 +40,8 @@ public class AddressService {
         return "Address Saved Successfully";
     }
 
-    public List<AddressResponseDTO> getUserAddress(int userId) throws Exception {
-        Optional<User> user = userRepo.findById(userId);
+    public List<AddressResponseDTO> getUserAddress(String email) throws Exception {
+        Optional<User> user = userRepo.findByUserEmail(email);
         if(!user.isPresent())
             throw new Exception("No such user");
         User confirmedUser = user.get();

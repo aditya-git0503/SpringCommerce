@@ -54,11 +54,12 @@ public class AuthService {
         if(!encoder.matches(request.getPassword(), confirmedUser.getUserPassword()))
             throw new Exception("Invalid password. Try again!");
 
-        String token = jwtService.generateToken(confirmedUser.getUserEmail());
-
         return new LoginResponseDTO(
-                    jwtService.generateToken(confirmedUser.getUserEmail()),
-                "Login Successful"
+                jwtService.generateToken(confirmedUser.getUserEmail()),
+                "Login Successful",
+                confirmedUser.getUserid(),
+                confirmedUser.getUserName(),
+                confirmedUser.getUserEmail()
         );
     }
 

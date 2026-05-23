@@ -64,9 +64,9 @@ public class OrderService {
         );
     }
 
-    public String placeOrder(PlaceOrderRequestDTO request) throws Exception {
+    public String placeOrder(String email, PlaceOrderRequestDTO request) throws Exception {
 
-        Optional<User> user = userRepo.findById(request.getUserId());
+        Optional<User> user = userRepo.findByUserEmail(email);
 
         if (!user.isPresent()) {
             throw new Exception("User not found");
@@ -82,12 +82,20 @@ public class OrderService {
         }
 
         Address confirmedAddress = address.get();
+        if (confirmedAddress.getUser().getUserid() != confirmedUser.getUserid()) {
+            throw new Exception("Address does not belong to logged-in user");
+        }
 
         List<CartItem> cartItems =
                 cartItemRepo.findAllById(request.getCartItemIds());
 
         if (cartItems.isEmpty()) {
             throw new Exception("No cart items selected");
+        }
+        boolean invalidCartOwnership = cartItems.stream()
+                .anyMatch(item -> item.getUser().getUserid() != confirmedUser.getUserid());
+        if (invalidCartOwnership) {
+            throw new Exception("One or more cart items do not belong to logged-in user");
         }
 
         Orders order = new Orders();
@@ -152,8 +160,8 @@ public class OrderService {
         return "Order placed successfully";
     }
 
-    public List<OrderResponseDTO> getUserOrders(int userId) throws Exception{
-        Optional<User> user = userRepo.findById(userId);
+    public List<OrderResponseDTO> getUserOrders(String email) throws Exception{
+        Optional<User> user = userRepo.findByUserEmail(email);
         if(!user.isPresent())
             throw new Exception("User not found");
         User confirmedUser = user.get();

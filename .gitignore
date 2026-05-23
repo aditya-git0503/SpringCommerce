@@ -11,3 +11,7 @@ backend/**/target
 
 # OS
 .DS_Store
+
+prd.txt
+thoughts.txt
+plan.md

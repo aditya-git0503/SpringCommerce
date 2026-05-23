@@ -3,7 +3,6 @@ package com.aditya.ecommerce.config;
 import com.aditya.ecommerce.security.JwtFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -34,13 +33,8 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**",
-                                "/products/**",
-                                "/products",
-                                "/products/",
-                                "/products/available",
-                                "/products/").permitAll()
-                        .requestMatchers(HttpMethod.PUT, "/cart/update", "/order/**").authenticated()
+                        .requestMatchers("/auth/**", "/products/**").permitAll()
+                        .requestMatchers("/cart/**", "/order/**", "/orders", "/address/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

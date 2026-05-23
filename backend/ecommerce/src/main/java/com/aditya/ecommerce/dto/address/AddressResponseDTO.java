@@ -1,4 +1,4 @@
-package com.aditya.ecommerce.dto;
+package com.aditya.ecommerce.dto.address;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

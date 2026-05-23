@@ -10,7 +10,6 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PlaceOrderRequestDTO {
-    private int userId;
     private int addressId;
     private List<Integer> cartItemIds;
 }
