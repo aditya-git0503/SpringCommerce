@@ -68,6 +68,10 @@ public class AuthService {
         if(!user.isPresent())
             throw new Exception("User not found");
         User confirmedUser = user.get();
+        if(request.getNewPassword() == null || request.getNewPassword().isBlank())
+            throw new Exception("New password cannot be empty");
+        if(request.getNewPassword().length() < 6)
+            throw new Exception("Password must be at least 6 characters");
         if(!(request.getNewPassword().equals(request.getConfirmPassword())))
             throw new Exception("Passwords do not match. Try again");
 
