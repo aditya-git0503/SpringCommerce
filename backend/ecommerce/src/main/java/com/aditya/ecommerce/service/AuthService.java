@@ -15,6 +15,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.sql.Date;
+import java.util.Locale;
 import java.util.Optional;
 
 @Service
@@ -31,17 +32,19 @@ public class AuthService {
     }
 
     public String register(RegisterRequestDTO request){
+        String normalizedEmail = normalizeEmail(request.getEmail());
+
         if(!request.getPassword().equals(request.getConfirmPassword())){
             throw new BadRequestException("Passwords do not match");
         }
 
-        if(userRepo.findByUserEmail(request.getEmail()).isPresent()){
+        if(userRepo.findByUserEmail(normalizedEmail).isPresent()){
             throw new ConflictException("User is already registered, sign in instead");
         }
         else{
             User user = new User();
             user.setUserName(request.getName());
-            user.setUserEmail(request.getEmail());
+            user.setUserEmail(normalizedEmail);
             user.setUserPassword(encoder.encode(request.getPassword()));
             user.setCreatedAtDate(new Date(System.currentTimeMillis()));
             userRepo.save(user);
@@ -50,7 +53,8 @@ public class AuthService {
     }
 
     public LoginResponseDTO login(LoginRequestDTO request) {
-        Optional<User> user = userRepo.findByUserEmail(request.getEmail());
+        String normalizedEmail = normalizeEmail(request.getEmail());
+        Optional<User> user = userRepo.findByUserEmail(normalizedEmail);
         if(!user.isPresent())
             throw new ResourceNotFoundException("Email not found. Register instead");
         User confirmedUser = user.get();
@@ -68,7 +72,8 @@ public class AuthService {
     }
 
     public String resetPassword(ResetPasswordDTO request) {
-        Optional<User> user = userRepo.findByUserEmail(request.getEmail());
+        String normalizedEmail = normalizeEmail(request.getEmail());
+        Optional<User> user = userRepo.findByUserEmail(normalizedEmail);
         if(!user.isPresent())
             throw new ResourceNotFoundException("User not found");
         User confirmedUser = user.get();
@@ -82,5 +87,12 @@ public class AuthService {
         confirmedUser.setUserPassword(encoder.encode(request.getNewPassword()));
         userRepo.save(confirmedUser);
         return "Password reset successful";
+    }
+
+    private String normalizeEmail(String email) {
+        if (email == null) {
+            return null;
+        }
+        return email.trim().toLowerCase(Locale.ROOT);
     }
 }

@@ -37,6 +37,26 @@ export default function OrdersPage() {
     navigate("/login");
   }
 
+  function formatOrderDate(orderDate) {
+    if (!orderDate) {
+      return "";
+    }
+
+    const [datePart, timePart] = orderDate.split("T");
+    if (!datePart || !timePart) {
+      return orderDate;
+    }
+
+    const [year, month, day] = datePart.split("-");
+    const [rawHour, minute] = timePart.split(":");
+
+    const hourNumber = Number(rawHour);
+    const displayHour = hourNumber % 12 || 12;
+    const meridian = hourNumber >= 12 ? "PM" : "AM";
+
+    return `${month}/${day}/${year}, ${displayHour}:${minute} ${meridian}`;
+  }
+
   async function handleRatingSubmit(productId) {
   const selectedValue = ratingInputs[productId];
 
@@ -92,7 +112,7 @@ export default function OrdersPage() {
             <h3>Order #{order.orderId}</h3>
             <p>Status: {order.status}</p>
             <p>Amount Paid: ₹{order.totalAmountPaid}</p>
-            <p>Placed On: {new Date(order.orderDate).toLocaleString()}</p>
+            <p>Placed On: {formatOrderDate(order.orderDate)}</p>
             <p>Delivery Address: {order.fullAddress}</p>
 
             <div className="order-items">

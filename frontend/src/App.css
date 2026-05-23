@@ -178,6 +178,8 @@ button:disabled {
   border-radius: 10px;
   padding: 10px;
   background: #14191a;
+  display: flex;
+  flex-direction: column;
 }
 
 .product-card img {
@@ -195,6 +197,12 @@ button:disabled {
 .order-card p {
   margin: 8px 0;
   color: var(--text);
+}
+
+.product-card button {
+  margin-top: auto;
+  align-self: center;
+  min-width: 150px;
 }
 
 .cart-item {
@@ -310,12 +318,19 @@ button:disabled {
 }
 
 .linkish-btn {
-  align-self: flex-start;
+  align-self: center;
+  margin-top: 6px;
 }
 
 input[type="checkbox"],
 input[type="radio"] {
   accent-color: var(--accent);
+}
+
+select,
+option {
+  background: var(--surface-2);
+  color: var(--text);
 }
 
 @media (max-width: 900px) {
@@ -384,6 +399,9 @@ input[type="radio"] {
 
 .rating-actions select {
   min-width: 160px;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border);
 }
 
 .scroll-top-btn {
