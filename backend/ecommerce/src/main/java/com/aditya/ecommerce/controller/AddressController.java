@@ -32,4 +32,20 @@ public class AddressController {
         String email = authentication.getName();
         return addressService.getUserAddress(email);
     }
+
+    @PutMapping("/address/{addressId}")
+    public String updateAddress(@PathVariable int addressId, @RequestBody Address address) {
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        return addressService.updateAddress(email, addressId, address);
+    }
+
+    @DeleteMapping("/address/{addressId}")
+    public String deleteAddress(@PathVariable int addressId) {
+        Authentication authentication =
+                SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        return addressService.deleteAddress(email, addressId);
+    }
 }

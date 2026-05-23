@@ -251,6 +251,22 @@ button:disabled {
   margin-bottom: 8px;
 }
 
+.address-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 10px;
+  background: #14191a;
+}
+
+.address-actions,
+.address-form-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
 .compact-form {
   margin-bottom: 10px;
 }

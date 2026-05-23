@@ -1,5 +1,6 @@
 package com.aditya.ecommerce.repo;
 
+import com.aditya.ecommerce.entity.Address;
 import com.aditya.ecommerce.entity.Orders;
 import com.aditya.ecommerce.entity.User;
 import org.springframework.data.jpa.repository.Query;
@@ -23,4 +24,6 @@ public interface OrderRepo extends JpaRepository<Orders, Integer> {
     List<Orders> findOrdersWithItemsByUser(@Param("user") User user);
 
     List<Orders> findByUser(User user);
+
+    boolean existsByAddress(Address address);
 }

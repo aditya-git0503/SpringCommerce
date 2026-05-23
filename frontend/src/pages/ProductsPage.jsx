@@ -21,13 +21,15 @@ export default function ProductsPage() {
   const [showCheckout, setShowCheckout] = useState(false);
   const [addresses, setAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState("");
-  const [newAddress, setNewAddress] = useState({
+  const emptyAddressForm = {
     fullAddress: "",
     city: "",
     state: "",
     pincode: "",
     landmark: "",
-  });
+  };
+  const [addressForm, setAddressForm] = useState(emptyAddressForm);
+  const [editingAddressId, setEditingAddressId] = useState(null);
 
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [loadingCart, setLoadingCart] = useState(true);
@@ -99,10 +101,17 @@ export default function ProductsPage() {
     try {
       const response = await api.get("/address");
       setAddresses(response.data);
-      if (response.data.length > 0) {
-        setSelectedAddressId(String(response.data[0].addressId));
-      } else {
+      if (response.data.length === 0) {
         setSelectedAddressId("");
+        return;
+      }
+
+      const selectedStillExists = response.data.some(
+        (address) => String(address.addressId) === selectedAddressId,
+      );
+
+      if (!selectedStillExists) {
+        setSelectedAddressId(String(response.data[0].addressId));
       }
     } catch (err) {
       setActionError(getApiErrorMessage(err, "Unable to fetch addresses"));
@@ -150,30 +159,67 @@ export default function ProductsPage() {
     }
   }
 
-  async function handleAddAddress(event) {
+  async function handleAddressSubmit(event) {
     event.preventDefault();
     setActionError("");
     setActionSuccess("");
 
     const payload = {
-      ...newAddress,
-      pincode: Number(newAddress.pincode),
-      landmark: newAddress.landmark || null,
+      ...addressForm,
+      pincode: Number(addressForm.pincode),
+      landmark: addressForm.landmark || null,
     };
 
     try {
-      await api.post("/address/add", payload);
-      setActionSuccess("Address saved successfully");
-      setNewAddress({
-        fullAddress: "",
-        city: "",
-        state: "",
-        pincode: "",
-        landmark: "",
-      });
+      if (editingAddressId) {
+        await api.put(`/address/${editingAddressId}`, payload);
+        setActionSuccess("Address updated successfully");
+      } else {
+        await api.post("/address/add", payload);
+        setActionSuccess("Address saved successfully");
+      }
+      setAddressForm(emptyAddressForm);
+      setEditingAddressId(null);
       await loadAddresses();
     } catch (err) {
-      setActionError(getApiErrorMessage(err, "Failed to save address"));
+      setActionError(
+        getApiErrorMessage(
+          err,
+          editingAddressId ? "Failed to update address" : "Failed to save address",
+        ),
+      );
+    }
+  }
+
+  function handleEditAddress(address) {
+    setEditingAddressId(address.addressId);
+    setAddressForm({
+      fullAddress: address.fullAddress,
+      city: address.city,
+      state: address.state,
+      pincode: String(address.pincode),
+      landmark: address.landmark || "",
+    });
+  }
+
+  function handleCancelAddressEdit() {
+    setEditingAddressId(null);
+    setAddressForm(emptyAddressForm);
+  }
+
+  async function handleDeleteAddress(addressId) {
+    setActionError("");
+    setActionSuccess("");
+
+    try {
+      await api.delete(`/address/${addressId}`);
+      setActionSuccess("Address deleted successfully");
+      if (editingAddressId === addressId) {
+        handleCancelAddressEdit();
+      }
+      await loadAddresses();
+    } catch (err) {
+      setActionError(getApiErrorMessage(err, "Failed to delete address"));
     }
   }
 
@@ -239,10 +285,10 @@ export default function ProductsPage() {
   const canPlaceOrder = selectedItems.length > 0 && Boolean(selectedAddressId);
 
   const isAddressFormValid =
-    newAddress.fullAddress.trim() !== "" &&
-    newAddress.city.trim() !== "" &&
-    newAddress.state.trim() !== "" &&
-    /^\d{6}$/.test(newAddress.pincode);
+    addressForm.fullAddress.trim() !== "" &&
+    addressForm.city.trim() !== "" &&
+    addressForm.state.trim() !== "" &&
+    /^\d{6}$/.test(addressForm.pincode);
 
   function handleScrollToTop() {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -334,10 +380,10 @@ export default function ProductsPage() {
               <article key={product.productId} className="product-card">
                 <img src={product.imageUrl} alt={product.productName} />
                 <h3>{product.productName}</h3>
-                <p>Price: ₹{product.price}</p>
-                <p>Stock: {product.stockAmount}</p>
-                <p>Rating: {product.avgRating} ({product.totalBuyers})</p>
                 <p>{product.description}</p>
+                <p>Price: ₹{product.price}</p>
+                <p>Rating: {product.avgRating} ({product.totalBuyers})</p>
+                <p>Stock: {product.stockAmount}</p>
                 <button
                   type="button"
                   disabled={showCheckout || product.stockAmount === 0}
@@ -443,29 +489,45 @@ export default function ProductsPage() {
               {addresses.length === 0 && <p>No saved addresses yet.</p>}
 
               {addresses.map((address) => (
-                <label key={address.addressId} className="address-option">
-                  <input
-                    type="radio"
-                    name="selectedAddress"
-                    checked={selectedAddressId === String(address.addressId)}
-                    onChange={() => setSelectedAddressId(String(address.addressId))}
-                  />
-                  <span>
-                    {address.fullAddress}, {address.city}, {address.state} -{" "}
-                    {address.pincode}
-                    {address.landmark ? ` (${address.landmark})` : ""}
-                  </span>
-                </label>
+                <div key={address.addressId} className="address-card">
+                  <label className="address-option">
+                    <input
+                      type="radio"
+                      name="selectedAddress"
+                      checked={selectedAddressId === String(address.addressId)}
+                      onChange={() => setSelectedAddressId(String(address.addressId))}
+                    />
+                    <span>
+                      {address.fullAddress}, {address.city}, {address.state} -{" "}
+                      {address.pincode}
+                      {address.landmark ? ` (${address.landmark})` : ""}
+                    </span>
+                  </label>
+                  <div className="address-actions">
+                    <button
+                      type="button"
+                      onClick={() => handleEditAddress(address)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteAddress(address.addressId)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
               ))}
 
-              <h4>Add New Address</h4>
-              <form onSubmit={handleAddAddress} className="form compact-form">
+              <h4>{editingAddressId ? "Edit Address" : "Add New Address"}</h4>
+              <form onSubmit={handleAddressSubmit} className="form compact-form">
                 <input
                   type="text"
                   placeholder="Full Address"
-                  value={newAddress.fullAddress}
+                  value={addressForm.fullAddress}
                   onChange={(event) =>
-                    setNewAddress((prev) => ({
+                    setAddressForm((prev) => ({
                       ...prev,
                       fullAddress: event.target.value,
                     }))
@@ -474,25 +536,25 @@ export default function ProductsPage() {
                 <input
                   type="text"
                   placeholder="City"
-                  value={newAddress.city}
+                  value={addressForm.city}
                   onChange={(event) =>
-                    setNewAddress((prev) => ({ ...prev, city: event.target.value }))
+                    setAddressForm((prev) => ({ ...prev, city: event.target.value }))
                   }
                 />
                 <input
                   type="text"
                   placeholder="State"
-                  value={newAddress.state}
+                  value={addressForm.state}
                   onChange={(event) =>
-                    setNewAddress((prev) => ({ ...prev, state: event.target.value }))
+                    setAddressForm((prev) => ({ ...prev, state: event.target.value }))
                   }
                 />
                 <input
                   type="text"
                   placeholder="Pincode (6 digits)"
-                  value={newAddress.pincode}
+                  value={addressForm.pincode}
                   onChange={(event) =>
-                    setNewAddress((prev) => ({
+                    setAddressForm((prev) => ({
                       ...prev,
                       pincode: event.target.value,
                     }))
@@ -501,17 +563,27 @@ export default function ProductsPage() {
                 <input
                   type="text"
                   placeholder="Landmark (optional)"
-                  value={newAddress.landmark}
+                  value={addressForm.landmark}
                   onChange={(event) =>
-                    setNewAddress((prev) => ({
+                    setAddressForm((prev) => ({
                       ...prev,
                       landmark: event.target.value,
                     }))
                   }
                 />
-                <button type="submit" disabled={!isAddressFormValid}>
-                  Save Address
-                </button>
+                <div className="address-form-actions">
+                  <button type="submit" disabled={!isAddressFormValid}>
+                    {editingAddressId ? "Update Address" : "Save Address"}
+                  </button>
+                  {editingAddressId && (
+                    <button
+                      type="button"
+                      onClick={handleCancelAddressEdit}
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
               </form>
 
               <button
