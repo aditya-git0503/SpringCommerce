@@ -3,6 +3,7 @@ package com.aditya.ecommerce.controller;
 import com.aditya.ecommerce.dto.cart.AddToCartRequestDTO;
 import com.aditya.ecommerce.dto.cart.CartResponseDTO;
 import com.aditya.ecommerce.entity.User;
+import com.aditya.ecommerce.exception.ResourceNotFoundException;
 import com.aditya.ecommerce.repo.UserRepo;
 import com.aditya.ecommerce.service.CartService;
 import org.springframework.security.core.Authentication;
@@ -31,7 +32,7 @@ public class CartController {
         String email = authentication.getName();
 
         User user = userRepo.findByUserEmail(email)
-                .orElseThrow();
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         return cartService.addToCart(
                 user,
@@ -49,20 +50,20 @@ public class CartController {
         String email = authentication.getName();
 
         User user = userRepo.findByUserEmail(email)
-                .orElseThrow();
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         return cartService.getCartItems(user);
     }
 
     @DeleteMapping("/cart/remove/{cartId}")
-    public String removeFromCart(@PathVariable int cartId) throws Exception {
+    public String removeFromCart(@PathVariable int cartId) {
         Authentication authentication =
                 SecurityContextHolder.getContext().getAuthentication();
 
         String email = authentication.getName();
 
         User user = userRepo.findByUserEmail(email)
-                .orElseThrow();
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         return cartService.removeFromCart(user, cartId);
     }
@@ -71,14 +72,14 @@ public class CartController {
     public String updateQuantity(
             @RequestParam int cartId,
             @RequestParam int quantity
-    ) throws Exception {
+    ) {
         Authentication authentication =
                 SecurityContextHolder.getContext().getAuthentication();
 
         String email = authentication.getName();
 
         User user = userRepo.findByUserEmail(email)
-                .orElseThrow();
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         return cartService.updateQuantity(user, cartId, quantity);
     }

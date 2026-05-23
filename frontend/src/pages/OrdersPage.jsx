@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/client.js";
 import { useAuth } from "../context/AuthContext.jsx";
+import { getApiErrorMessage } from "../utils/apiError.js";
 
 export default function OrdersPage() {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ export default function OrdersPage() {
       const response = await api.get("/orders");
       setOrders(response.data);
     } catch (err) {
-      setError(err.response?.data || "Unable to fetch orders");
+      setError(getApiErrorMessage(err, "Unable to fetch orders"));
     } finally {
       setLoading(false);
     }
@@ -59,7 +60,7 @@ export default function OrdersPage() {
 
     await loadOrders();
   } catch (err) {
-    setRatingMessage(err.response?.data || "Failed to submit rating");
+    setRatingMessage(getApiErrorMessage(err, "Failed to submit rating"));
   }
 }
 

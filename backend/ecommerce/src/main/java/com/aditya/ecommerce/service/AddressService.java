@@ -3,6 +3,7 @@ package com.aditya.ecommerce.service;
 import com.aditya.ecommerce.dto.address.AddressResponseDTO;
 import com.aditya.ecommerce.entity.Address;
 import com.aditya.ecommerce.entity.User;
+import com.aditya.ecommerce.exception.ResourceNotFoundException;
 import com.aditya.ecommerce.repo.AddressRepo;
 import com.aditya.ecommerce.repo.UserRepo;
 import org.springframework.stereotype.Service;
@@ -30,20 +31,20 @@ public class AddressService {
                 );
     }
 
-    public String addAddress(String email, Address address) throws Exception {
+    public String addAddress(String email, Address address) {
         Optional<User> user = userRepo.findByUserEmail(email);
         if(!user.isPresent())
-            throw new Exception("User not present");
+            throw new ResourceNotFoundException("User not present");
         User confirmedUser = user.get();
         address.setUser(confirmedUser);
         addressRepo.save(address);
         return "Address Saved Successfully";
     }
 
-    public List<AddressResponseDTO> getUserAddress(String email) throws Exception {
+    public List<AddressResponseDTO> getUserAddress(String email) {
         Optional<User> user = userRepo.findByUserEmail(email);
         if(!user.isPresent())
-            throw new Exception("No such user");
+            throw new ResourceNotFoundException("No such user");
         User confirmedUser = user.get();
         return addressRepo.findByUser(confirmedUser)
                 .stream()

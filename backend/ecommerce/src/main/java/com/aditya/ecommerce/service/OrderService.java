@@ -4,6 +4,10 @@ import com.aditya.ecommerce.dto.order.OrderItemResponseDTO;
 import com.aditya.ecommerce.dto.order.OrderResponseDTO;
 import com.aditya.ecommerce.dto.order.PlaceOrderRequestDTO;
 import com.aditya.ecommerce.entity.*;
+import com.aditya.ecommerce.exception.BadRequestException;
+import com.aditya.ecommerce.exception.ConflictException;
+import com.aditya.ecommerce.exception.ForbiddenException;
+import com.aditya.ecommerce.exception.ResourceNotFoundException;
 import com.aditya.ecommerce.repo.*;
 import org.springframework.stereotype.Service;
 
@@ -64,12 +68,12 @@ public class OrderService {
         );
     }
 
-    public String placeOrder(String email, PlaceOrderRequestDTO request) throws Exception {
+    public String placeOrder(String email, PlaceOrderRequestDTO request) {
 
         Optional<User> user = userRepo.findByUserEmail(email);
 
         if (!user.isPresent()) {
-            throw new Exception("User not found");
+            throw new ResourceNotFoundException("User not found");
         }
 
         User confirmedUser = user.get();
@@ -78,24 +82,24 @@ public class OrderService {
                 addressRepo.findById(request.getAddressId());
 
         if (!address.isPresent()) {
-            throw new Exception("Address not found");
+            throw new ResourceNotFoundException("Address not found");
         }
 
         Address confirmedAddress = address.get();
         if (confirmedAddress.getUser().getUserid() != confirmedUser.getUserid()) {
-            throw new Exception("Address does not belong to logged-in user");
+            throw new ForbiddenException("Address does not belong to logged-in user");
         }
 
         List<CartItem> cartItems =
                 cartItemRepo.findAllById(request.getCartItemIds());
 
         if (cartItems.isEmpty()) {
-            throw new Exception("No cart items selected");
+            throw new BadRequestException("No cart items selected");
         }
         boolean invalidCartOwnership = cartItems.stream()
                 .anyMatch(item -> item.getUser().getUserid() != confirmedUser.getUserid());
         if (invalidCartOwnership) {
-            throw new Exception("One or more cart items do not belong to logged-in user");
+            throw new ForbiddenException("One or more cart items do not belong to logged-in user");
         }
 
         Orders order = new Orders();
@@ -115,7 +119,7 @@ public class OrderService {
 
             if (product.getStockAmount() < c.getQuantity()) {
 
-                throw new Exception(
+                throw new ConflictException(
                         product.getProductName()
                                 + " is out of stock. Only "
                                 + product.getStockAmount()
@@ -160,10 +164,10 @@ public class OrderService {
         return "Order placed successfully";
     }
 
-    public List<OrderResponseDTO> getUserOrders(String email) throws Exception{
+    public List<OrderResponseDTO> getUserOrders(String email){
         Optional<User> user = userRepo.findByUserEmail(email);
         if(!user.isPresent())
-            throw new Exception("User not found");
+            throw new ResourceNotFoundException("User not found");
         User confirmedUser = user.get();
 
         return orderRepo.findByUser(confirmedUser)

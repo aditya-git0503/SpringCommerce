@@ -4,6 +4,10 @@ import com.aditya.ecommerce.dto.cart.CartResponseDTO;
 import com.aditya.ecommerce.entity.CartItem;
 import com.aditya.ecommerce.entity.Product;
 import com.aditya.ecommerce.entity.User;
+import com.aditya.ecommerce.exception.BadRequestException;
+import com.aditya.ecommerce.exception.ConflictException;
+import com.aditya.ecommerce.exception.ForbiddenException;
+import com.aditya.ecommerce.exception.ResourceNotFoundException;
 import com.aditya.ecommerce.repo.CartItemRepo;
 import com.aditya.ecommerce.repo.ProductRepo;
 import org.springframework.stereotype.Service;
@@ -37,9 +41,9 @@ public class CartService {
     public String addToCart(User user, int productId, int quantity){
 
         Product confirmedProduct = productRepo.findById(productId)
-                .orElseThrow();
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
         if (quantity <= 0) {
-            throw new RuntimeException("Quantity should be greater than 0");
+            throw new BadRequestException("Quantity should be greater than 0");
         }
 
         Optional<CartItem> cartItem =
@@ -50,7 +54,7 @@ public class CartService {
             CartItem existingItem = cartItem.get();
             int nextQuantity = existingItem.getQuantity() + quantity;
             if (nextQuantity > confirmedProduct.getStockAmount()) {
-                throw new RuntimeException("Requested quantity exceeds available stock");
+                throw new ConflictException("Requested quantity exceeds available stock");
             }
 
             existingItem.setQuantity(nextQuantity);
@@ -60,7 +64,7 @@ public class CartService {
 
         else{
             if (quantity > confirmedProduct.getStockAmount()) {
-                throw new RuntimeException("Requested quantity exceeds available stock");
+                throw new ConflictException("Requested quantity exceeds available stock");
             }
 
             CartItem newCartItem = new CartItem();
@@ -83,12 +87,12 @@ public class CartService {
                 .toList();
     }
 
-    public String removeFromCart(User user, int cartId) throws Exception {
+    public String removeFromCart(User user, int cartId) {
 
         CartItem cartItem = cartItemRepo.findById(cartId)
-                .orElseThrow(() -> new Exception("Cart item not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Cart item not found"));
         if (cartItem.getUser().getUserid() != user.getUserid()) {
-            throw new Exception("Unauthorized cart access");
+            throw new ForbiddenException("Unauthorized cart access");
         }
 
         cartItemRepo.delete(cartItem);
@@ -96,12 +100,12 @@ public class CartService {
         return "Item removed from cart";
     }
 
-    public String updateQuantity(User user, int cartId, int quantity) throws Exception {
+    public String updateQuantity(User user, int cartId, int quantity) {
 
         CartItem existingCartItem = cartItemRepo.findById(cartId)
-                .orElseThrow(() -> new Exception("Cart Item not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Cart Item not found"));
         if (existingCartItem.getUser().getUserid() != user.getUserid()) {
-            throw new Exception("Unauthorized cart access");
+            throw new ForbiddenException("Unauthorized cart access");
         }
 
         if(quantity <= 0){
@@ -112,7 +116,7 @@ public class CartService {
         }
 
         if (quantity > existingCartItem.getProduct().getStockAmount()) {
-            throw new Exception("Requested quantity exceeds available stock");
+            throw new ConflictException("Requested quantity exceeds available stock");
         }
 
         existingCartItem.setQuantity(quantity);

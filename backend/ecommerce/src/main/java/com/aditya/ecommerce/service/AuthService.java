@@ -5,6 +5,10 @@ import com.aditya.ecommerce.dto.auth.LoginResponseDTO;
 import com.aditya.ecommerce.dto.auth.RegisterRequestDTO;
 import com.aditya.ecommerce.dto.auth.ResetPasswordDTO;
 import com.aditya.ecommerce.entity.User;
+import com.aditya.ecommerce.exception.BadRequestException;
+import com.aditya.ecommerce.exception.ConflictException;
+import com.aditya.ecommerce.exception.ResourceNotFoundException;
+import com.aditya.ecommerce.exception.UnauthorizedException;
 import com.aditya.ecommerce.repo.UserRepo;
 import com.aditya.ecommerce.security.JwtService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -26,13 +30,13 @@ public class AuthService {
         this.encoder = encoder;
     }
 
-    public String register(RegisterRequestDTO request) throws Exception{
+    public String register(RegisterRequestDTO request){
         if(!request.getPassword().equals(request.getConfirmPassword())){
-            throw new Exception("Passwords do not match! Try again");
+            throw new BadRequestException("Passwords do not match");
         }
 
         if(userRepo.findByUserEmail(request.getEmail()).isPresent()){
-            throw new Exception("User is already registered, sign in instead");
+            throw new ConflictException("User is already registered, sign in instead");
         }
         else{
             User user = new User();
@@ -45,14 +49,14 @@ public class AuthService {
         }
     }
 
-    public LoginResponseDTO login(LoginRequestDTO request) throws Exception{
+    public LoginResponseDTO login(LoginRequestDTO request) {
         Optional<User> user = userRepo.findByUserEmail(request.getEmail());
         if(!user.isPresent())
-            throw new Exception("Email not found. Register instead");
+            throw new ResourceNotFoundException("Email not found. Register instead");
         User confirmedUser = user.get();
 
         if(!encoder.matches(request.getPassword(), confirmedUser.getUserPassword()))
-            throw new Exception("Invalid password. Try again!");
+            throw new UnauthorizedException("Invalid password. Try again!");
 
         return new LoginResponseDTO(
                 jwtService.generateToken(confirmedUser.getUserEmail()),
@@ -63,17 +67,17 @@ public class AuthService {
         );
     }
 
-    public String resetPassword(ResetPasswordDTO request) throws Exception {
+    public String resetPassword(ResetPasswordDTO request) {
         Optional<User> user = userRepo.findByUserEmail(request.getEmail());
         if(!user.isPresent())
-            throw new Exception("User not found");
+            throw new ResourceNotFoundException("User not found");
         User confirmedUser = user.get();
         if(request.getNewPassword() == null || request.getNewPassword().isBlank())
-            throw new Exception("New password cannot be empty");
+            throw new BadRequestException("New password cannot be empty");
         if(request.getNewPassword().length() < 6)
-            throw new Exception("Password must be at least 6 characters");
+            throw new BadRequestException("Password must be at least 6 characters");
         if(!(request.getNewPassword().equals(request.getConfirmPassword())))
-            throw new Exception("Passwords do not match. Try again");
+            throw new BadRequestException("Passwords do not match. Try again");
 
         confirmedUser.setUserPassword(encoder.encode(request.getNewPassword()));
         userRepo.save(confirmedUser);

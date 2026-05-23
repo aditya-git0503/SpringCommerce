@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/client.js";
 import { useAuth } from "../context/AuthContext.jsx";
+import { getApiErrorMessage } from "../utils/apiError.js";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -54,7 +55,7 @@ export default function LoginPage() {
       setMessage(response.data.message || "Login successful");
       navigate("/products");
     } catch (err) {
-      setError(err.response?.data || "Login failed");
+      setError(getApiErrorMessage(err, "Login failed"));
     } finally {
       setLoading(false);
     }
@@ -75,7 +76,7 @@ export default function LoginPage() {
         password: registerForm.password,
       });
     } catch (err) {
-      setError(err.response?.data || "Registration failed");
+      setError(getApiErrorMessage(err, "Registration failed"));
     } finally {
       setLoading(false);
     }
@@ -112,7 +113,7 @@ export default function LoginPage() {
       }));
       setResetForm({ email: "", newPassword: "", confirmPassword: "" });
     } catch (err) {
-      setError(err.response?.data || "Password reset failed");
+      setError(getApiErrorMessage(err, "Password reset failed"));
     } finally {
       setLoading(false);
     }

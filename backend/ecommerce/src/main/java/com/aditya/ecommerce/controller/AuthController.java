@@ -18,17 +18,17 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public String register(@RequestBody RegisterRequestDTO request) throws Exception{
+    public String register(@RequestBody RegisterRequestDTO request) {
         return authService.register(request);
     }
 
     @PostMapping("/login")
-    public LoginResponseDTO login(@RequestBody LoginRequestDTO request) throws Exception{
+    public LoginResponseDTO login(@RequestBody LoginRequestDTO request) {
         return authService.login(request);
     }
 
     @PostMapping("/reset-password")
-    public String resetPassword(@RequestBody ResetPasswordDTO request) throws Exception{
+    public String resetPassword(@RequestBody ResetPasswordDTO request) {
         return authService.resetPassword(request);
     }
 }

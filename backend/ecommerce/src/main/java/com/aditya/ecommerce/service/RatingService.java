@@ -2,6 +2,8 @@ package com.aditya.ecommerce.service;
 
 import com.aditya.ecommerce.dto.product.RateProductRequestDTO;
 import com.aditya.ecommerce.entity.*;
+import com.aditya.ecommerce.exception.ForbiddenException;
+import com.aditya.ecommerce.exception.ResourceNotFoundException;
 import com.aditya.ecommerce.repo.*;
 import org.springframework.stereotype.Service;
 
@@ -24,9 +26,9 @@ public class RatingService {
         this.orderRepo = orderRepo;
     }
 
-    public void rateProduct(String email, RateProductRequestDTO request) throws Exception{
-        User confirmedUser = userRepo.findByUserEmail(email).orElseThrow();
-        Product confirmedProduct = productRepo.findById(request.getProductId()).orElseThrow(() -> new Exception("Product not found"));
+    public void rateProduct(String email, RateProductRequestDTO request){
+        User confirmedUser = userRepo.findByUserEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        Product confirmedProduct = productRepo.findById(request.getProductId()).orElseThrow(() -> new ResourceNotFoundException("Product not found"));
         List<Orders> orders = orderRepo.findByUser(confirmedUser);
 
         boolean hasPurchased = false;
@@ -42,7 +44,7 @@ public class RatingService {
         }
 
         if(!hasPurchased){
-            throw new Exception("You can rate only purchased products!");
+            throw new ForbiddenException("You can rate only purchased products!");
         }
 
         Optional<ProductRating> existingRating = productRatingRepo.findByUserAndProduct(confirmedUser, confirmedProduct);

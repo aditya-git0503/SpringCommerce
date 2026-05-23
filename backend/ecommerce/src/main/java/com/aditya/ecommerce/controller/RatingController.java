@@ -17,7 +17,7 @@ public class RatingController {
 
 
     @PostMapping("/ratings")
-    public String rateProduct(@RequestBody @Valid RateProductRequestDTO request) throws Exception {
+    public String rateProduct(@RequestBody @Valid RateProductRequestDTO request) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
         ratingService.rateProduct(email, request);

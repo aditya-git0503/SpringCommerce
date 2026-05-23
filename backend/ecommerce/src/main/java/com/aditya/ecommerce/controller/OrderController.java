@@ -19,7 +19,7 @@ public class OrderController {
     }
 
     @PostMapping("/order/place")
-    public String placeOrder(@RequestBody PlaceOrderRequestDTO request) throws Exception{
+    public String placeOrder(@RequestBody PlaceOrderRequestDTO request) {
         Authentication authentication =
                 SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
@@ -27,7 +27,7 @@ public class OrderController {
     }
 
     @GetMapping("/orders")
-    public List<OrderResponseDTO> getOrders() throws Exception {
+    public List<OrderResponseDTO> getOrders()  {
         Authentication authentication =
                 SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();

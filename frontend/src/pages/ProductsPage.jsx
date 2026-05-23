@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/client.js";
 import { useAuth } from "../context/AuthContext.jsx";
+import { getApiErrorMessage } from "../utils/apiError.js";
 
 export default function ProductsPage() {
   const navigate = useNavigate();
@@ -51,7 +52,7 @@ export default function ProductsPage() {
       const response = await api.get("/products");
       setProducts(response.data);
     } catch (err) {
-      setActionError(err.response?.data || "Unable to fetch products");
+      setActionError(getApiErrorMessage(err, "Unable to fetch products"));
     } finally {
       setLoadingProducts(false);
     }
@@ -69,7 +70,7 @@ export default function ProductsPage() {
         return filtered.length === 0 ? validIds : filtered;
       });
     } catch (err) {
-      setActionError(err.response?.data || "Unable to fetch cart items");
+      setActionError(getApiErrorMessage(err, "Unable to fetch cart items"));
     } finally {
       setLoadingCart(false);
     }
@@ -85,7 +86,7 @@ export default function ProductsPage() {
         setSelectedAddressId("");
       }
     } catch (err) {
-      setActionError(err.response?.data || "Unable to fetch addresses");
+      setActionError(getApiErrorMessage(err, "Unable to fetch addresses"));
     }
   }
 
@@ -104,7 +105,7 @@ export default function ProductsPage() {
       setActionSuccess("Product added to cart");
       await loadCartItems();
     } catch (err) {
-      setActionError(err.response?.data || "Failed to add to cart");
+      setActionError(getApiErrorMessage(err, "Failed to add to cart"));
     }
   }
 
@@ -116,7 +117,7 @@ export default function ProductsPage() {
       });
       await loadCartItems();
     } catch (err) {
-      setActionError(err.response?.data || "Failed to update quantity");
+      setActionError(getApiErrorMessage(err, "Failed to update quantity"));
     }
   }
 
@@ -126,7 +127,7 @@ export default function ProductsPage() {
       await api.delete(`/cart/remove/${cartId}`);
       await loadCartItems();
     } catch (err) {
-      setActionError(err.response?.data || "Failed to remove cart item");
+      setActionError(getApiErrorMessage(err, "Failed to remove cart item"));
     }
   }
 
@@ -153,7 +154,7 @@ export default function ProductsPage() {
       });
       await loadAddresses();
     } catch (err) {
-      setActionError(err.response?.data || "Failed to save address");
+      setActionError(getApiErrorMessage(err, "Failed to save address"));
     }
   }
 
@@ -170,7 +171,7 @@ export default function ProductsPage() {
       await Promise.all([loadCartItems(), loadProducts()]);
       setShowCheckout(false);
     } catch (err) {
-      setActionError(err.response?.data || "Failed to place order");
+      setActionError(getApiErrorMessage(err, "Failed to place order"));
     }
   }
 

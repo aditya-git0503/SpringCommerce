@@ -18,7 +18,7 @@ public class AddressController {
     }
 
     @PostMapping("/address/add")
-    public String addAddress(@RequestBody Address address) throws Exception{
+    public String addAddress(@RequestBody Address address) {
         Authentication authentication =
                 SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
@@ -26,7 +26,7 @@ public class AddressController {
     }
 
     @GetMapping("/address")
-    public List<AddressResponseDTO> getUserAddress() throws Exception{
+    public List<AddressResponseDTO> getUserAddress() {
         Authentication authentication =
                 SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
