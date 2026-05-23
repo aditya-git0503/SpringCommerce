@@ -8,7 +8,6 @@ import com.aditya.ecommerce.exception.ResourceNotFoundException;
 import com.aditya.ecommerce.repo.*;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -16,14 +15,12 @@ public class RatingService {
     private final ProductRatingRepo productRatingRepo;
     private final UserRepo userRepo;
     private final ProductRepo productRepo;
-    private final OrderRepo orderRepo;
     private final OrderItemRepo orderItemRepo;
 
-    public RatingService(ProductRatingRepo productRatingRepo, UserRepo userRepo, ProductRepo productRepo, OrderRepo orderRepo, OrderItemRepo orderItemRepo) {
+    public RatingService(ProductRatingRepo productRatingRepo, UserRepo userRepo, ProductRepo productRepo, OrderItemRepo orderItemRepo) {
         this.productRatingRepo = productRatingRepo;
         this.userRepo = userRepo;
         this.productRepo = productRepo;
-        this.orderRepo = orderRepo;
         this.orderItemRepo = orderItemRepo;
     }
 
@@ -53,38 +50,14 @@ public class RatingService {
 
         productRatingRepo.save(ratingToSave);
 
-        List<ProductRating> allRatings = productRatingRepo.findByProduct(confirmedProduct);
+        int currentRatingCount = confirmedProduct.getRatingCount();
+        float currentAverage = confirmedProduct.getAvgRating();
+        float updatedAverage =
+                ((currentAverage * currentRatingCount) + request.getRating())
+                        / (currentRatingCount + 1);
 
-        int total = 0;
-        for(ProductRating r : allRatings){
-            total += r.getRating();
-        }
-
-        float avg = 0;
-        if(!allRatings.isEmpty()){
-            avg = (float) total/allRatings.size();
-        }
-
-        confirmedProduct.setAvgRating(avg);
-
-        List<Orders> allOrders = orderRepo.findAll();
-        int totalBuys = 0;
-
-        for(Orders o : allOrders){
-            boolean boughtThis = false;
-
-            for(OrderItem item : o.getOrderItems()){
-                if(item.getProduct().getProductId() == confirmedProduct.getProductId()){
-                    boughtThis = true;
-                    break;
-                }
-            }
-
-            if(boughtThis)
-                totalBuys++;
-
-        }
-        confirmedProduct.setTotalBuyers(totalBuys);
+        confirmedProduct.setAvgRating(updatedAverage);
+        confirmedProduct.setRatingCount(currentRatingCount + 1);
         productRepo.save(confirmedProduct);
     }
 }

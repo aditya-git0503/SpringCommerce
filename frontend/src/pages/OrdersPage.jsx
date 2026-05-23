@@ -11,6 +11,7 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   const [ratingInputs, setRatingInputs] = useState({}); 
   const [ratingMessage, setRatingMessage] = useState(""); 
@@ -30,6 +31,16 @@ export default function OrdersPage() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadOrders();
+  }, []);
+
+  useEffect(() => {
+    function onScroll() {
+      setShowScrollTop(window.scrollY > 320);
+    }
+
+    window.addEventListener("scroll", onScroll);
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   function handleLogout() {
@@ -55,6 +66,10 @@ export default function OrdersPage() {
     const meridian = hourNumber >= 12 ? "PM" : "AM";
 
     return `${month}/${day}/${year}, ${displayHour}:${minute} ${meridian}`;
+  }
+
+  function handleScrollToTop() {
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   async function handleRatingSubmit(productId, orderItemId) {
@@ -158,6 +173,17 @@ export default function OrdersPage() {
           </article>
         ))}
       </div>
+
+      {showScrollTop && (
+        <button
+          type="button"
+          className="scroll-top-btn"
+          onClick={handleScrollToTop}
+          aria-label="Scroll to top"
+        >
+          ↑ Top
+        </button>
+      )}
     </div>
   );
 }

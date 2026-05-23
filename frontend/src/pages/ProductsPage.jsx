@@ -20,6 +20,7 @@ export default function ProductsPage() {
 
   const [showCheckout, setShowCheckout] = useState(false);
   const [addresses, setAddresses] = useState([]);
+  const [addressSearch, setAddressSearch] = useState("");
   const [selectedAddressId, setSelectedAddressId] = useState("");
   const emptyAddressForm = {
     fullAddress: "",
@@ -244,6 +245,28 @@ export default function ProductsPage() {
     () => [...new Set(products.map((product) => product.category))],
     [products],
   );
+
+  const filteredAddresses = useMemo(() => {
+    const keyword = addressSearch.trim().toLowerCase();
+
+    if (keyword === "") {
+      return addresses;
+    }
+
+    return addresses.filter((address) => {
+      const combinedAddress = [
+        address.fullAddress,
+        address.city,
+        address.state,
+        address.pincode,
+        address.landmark || "",
+      ]
+        .join(" ")
+        .toLowerCase();
+
+      return combinedAddress.includes(keyword);
+    });
+  }, [addresses, addressSearch]);
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
@@ -488,37 +511,55 @@ export default function ProductsPage() {
 
               {addresses.length === 0 && <p>No saved addresses yet.</p>}
 
-              {addresses.map((address) => (
-                <div key={address.addressId} className="address-card">
-                  <label className="address-option">
-                    <input
-                      type="radio"
-                      name="selectedAddress"
-                      checked={selectedAddressId === String(address.addressId)}
-                      onChange={() => setSelectedAddressId(String(address.addressId))}
-                    />
-                    <span>
-                      {address.fullAddress}, {address.city}, {address.state} -{" "}
-                      {address.pincode}
-                      {address.landmark ? ` (${address.landmark})` : ""}
-                    </span>
-                  </label>
-                  <div className="address-actions">
-                    <button
-                      type="button"
-                      onClick={() => handleEditAddress(address)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDeleteAddress(address.addressId)}
-                    >
-                      Delete
-                    </button>
+              {addresses.length > 0 && (
+                <>
+                  <input
+                    type="text"
+                    className="address-search"
+                    placeholder="Search saved addresses"
+                    value={addressSearch}
+                    onChange={(event) => setAddressSearch(event.target.value)}
+                  />
+
+                  {filteredAddresses.length === 0 && (
+                    <p>No addresses match your search.</p>
+                  )}
+
+                  <div className="address-list-scroll">
+                    {filteredAddresses.map((address) => (
+                      <div key={address.addressId} className="address-card">
+                        <label className="address-option">
+                          <input
+                            type="radio"
+                            name="selectedAddress"
+                            checked={selectedAddressId === String(address.addressId)}
+                            onChange={() => setSelectedAddressId(String(address.addressId))}
+                          />
+                          <span>
+                            {address.fullAddress}, {address.city}, {address.state} -{" "}
+                            {address.pincode}
+                            {address.landmark ? ` (${address.landmark})` : ""}
+                          </span>
+                        </label>
+                        <div className="address-actions">
+                          <button
+                            type="button"
+                            onClick={() => handleEditAddress(address)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteAddress(address.addressId)}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </div>
-              ))}
+                </>
+              )}
 
               <h4>{editingAddressId ? "Edit Address" : "Add New Address"}</h4>
               <form onSubmit={handleAddressSubmit} className="form compact-form">

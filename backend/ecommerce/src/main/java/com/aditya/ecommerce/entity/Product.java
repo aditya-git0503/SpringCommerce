@@ -36,6 +36,9 @@ public class Product {
     @Column(name = "avg_rating")
     private float avgRating;
 
+    @Column(name = "rating_count")
+    private int ratingCount;
+
     private String description;
 
     @Column(name = "category")
