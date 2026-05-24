@@ -184,8 +184,12 @@ button:disabled {
 
 .product-card img {
   width: 100%;
-  height: 180px;
-  object-fit: cover;
+  height: 190px;
+  object-fit: contain;
+  object-position: center;
+  padding: 14px;
+  box-sizing: border-box;
+  background: #0d1112;
   border-radius: 6px;
 }
 
@@ -399,6 +403,10 @@ option {
 
   .product-list {
     grid-template-columns: 1fr;
+  }
+
+  .product-card img {
+    height: 220px;
   }
 }
 
