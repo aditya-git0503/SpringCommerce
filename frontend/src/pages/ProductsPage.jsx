@@ -911,6 +911,30 @@ export default function ProductsPage() {
                   }
                 />
 
+                <input
+                  type="text"
+                  placeholder="City"
+                  value={addressForm.city}
+                  onChange={(event) =>
+                    setAddressForm((prev) => ({
+                      ...prev,
+                      city: event.target.value,
+                    }))
+                  }
+                />
+
+                <input
+                  type="text"
+                  placeholder="State"
+                  value={addressForm.state}
+                  onChange={(event) =>
+                    setAddressForm((prev) => ({
+                      ...prev,
+                      state: event.target.value,
+                    }))
+                  }
+                />
+
                 
 
                 <input
