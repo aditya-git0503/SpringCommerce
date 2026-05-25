@@ -51,11 +51,6 @@ export default function ProductsPage() {
   const [actionSuccess, setActionSuccess] = useState("");
   const [showScrollTop, setShowScrollTop] = useState(false);
 
-  const addressTextPattern = /^(?=.*[A-Za-z])[A-Za-z0-9 ]+$/;
-
-  function isAddressFieldValid(value) {
-    return addressTextPattern.test(value.trim());
-  }
 
   useEffect(() => {
     loadProducts();
@@ -527,12 +522,10 @@ export default function ProductsPage() {
   const canPlaceOrder = selectedItems.length > 0 && Boolean(selectedAddressId);
 
   const isAddressFormValid =
-    isAddressFieldValid(addressForm.fullAddress) &&
-    isAddressFieldValid(addressForm.city) &&
-    isAddressFieldValid(addressForm.state) &&
-    /^\d{6}$/.test(addressForm.pincode) &&
-    (addressForm.landmark.trim() === "" ||
-      isAddressFieldValid(addressForm.landmark));
+    addressForm.fullAddress.trim() !== "" &&
+    addressForm.city.trim() !== "" &&
+    addressForm.state.trim() !== "" &&
+    /^\d{6}$/.test(addressForm.pincode);
 
   function handleScrollToTop() {
     window.scrollTo({ top: 0, behavior: "smooth" });

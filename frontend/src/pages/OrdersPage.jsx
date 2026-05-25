@@ -88,11 +88,6 @@ export default function OrdersPage() {
     return status.replaceAll("_", " ");
   }
 
-  const addressTextPattern = /^(?=.*[A-Za-z])[A-Za-z0-9 ]+$/;
-
-  function isAddressFieldValid(value) {
-    return addressTextPattern.test(value.trim());
-  }
 
   function formatAmount(amount) {
     return Number.isInteger(amount) ? amount.toFixed(0) : amount.toFixed(2);
@@ -268,15 +263,10 @@ export default function OrdersPage() {
 }
 
   const isDeliveryFormValid =
-    isAddressFieldValid(deliveryForm.fullAddress) &&
-    isAddressFieldValid(deliveryForm.city) &&
-    isAddressFieldValid(deliveryForm.state) &&
-    /^[0-9]{6}$/.test(deliveryForm.pincode) &&
-    (deliveryForm.landmark.trim() === "" ||
-      isAddressFieldValid(deliveryForm.landmark));
-
-  const addressValidationMessage =
-    "Use letters, numbers, and spaces only. Include at least one letter.";
+    deliveryForm.fullAddress.trim() !== "" &&
+    deliveryForm.city.trim() !== "" &&
+    deliveryForm.state.trim() !== "" &&
+    /^[0-9]{6}$/.test(deliveryForm.pincode);
 
   return (
     <div className="page orders-page">
@@ -438,9 +428,6 @@ export default function OrdersPage() {
                   }
                 />
                 <div className="order-address-actions">
-                  {!isDeliveryFormValid && (
-                    <p className="error-text">{addressValidationMessage}</p>
-                  )}
                   <button
                     type="button"
                     onClick={() => saveDeliveryAddress(order.orderId)}
