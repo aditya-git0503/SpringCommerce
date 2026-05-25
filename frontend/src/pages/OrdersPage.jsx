@@ -13,6 +13,7 @@ export default function OrdersPage() {
   const [error, setError] = useState("");
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [editingOrderId, setEditingOrderId] = useState(null);
+  const [expandedBillId, setExpandedBillId] = useState(null);
   const [deliveryForm, setDeliveryForm] = useState({
     fullAddress: "",
     city: "",
@@ -85,6 +86,103 @@ export default function OrdersPage() {
       return "";
     }
     return status.replaceAll("_", " ");
+  }
+
+  const addressTextPattern = /^(?=.*[A-Za-z])[A-Za-z0-9 ]+$/;
+
+  function isAddressFieldValid(value) {
+    return addressTextPattern.test(value.trim());
+  }
+
+  function formatAmount(amount) {
+    return Number.isInteger(amount) ? amount.toFixed(0) : amount.toFixed(2);
+  }
+
+  function getOrderSubtotal(order) {
+    if (order.originalAmount != null) {
+      return order.originalAmount;
+    }
+    return order.orderItems.reduce(
+      (total, item) => total + item.priceAtPurchase * item.quantity,
+      0,
+    );
+  }
+
+  function getOrderDiscount(order) {
+    if (order.discountAmount != null) {
+      return order.discountAmount;
+    }
+    const subtotal = getOrderSubtotal(order);
+    return Math.max(0, subtotal - order.totalAmountPaid);
+  }
+
+  function handlePrintBill(order) {
+    const subtotal = getOrderSubtotal(order);
+    const discount = getOrderDiscount(order);
+    const totalPaid = Math.max(0, subtotal - discount);
+
+    const itemsHtml = order.orderItems
+      .map(
+        (item) => `
+          <tr>
+            <td>${item.productName}</td>
+            <td>${item.quantity}</td>
+            <td>₹${formatAmount(item.priceAtPurchase)}</td>
+            <td>₹${formatAmount(item.priceAtPurchase * item.quantity)}</td>
+          </tr>
+        `,
+      )
+      .join("");
+
+    const billWindow = window.open("", "_blank", "width=800,height=600");
+    if (!billWindow) {
+      setRatingMessage("Popup blocked. Allow popups to print the bill.");
+      return;
+    }
+
+    billWindow.document.write(`
+      <html>
+        <head>
+          <title>Order #${order.orderId} Bill</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 24px; color: #111; }
+            h1 { margin-bottom: 6px; }
+            .muted { color: #555; }
+            table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            th { background: #f2f2f2; }
+            .summary { margin-top: 16px; }
+            .summary div { display: flex; justify-content: space-between; margin: 6px 0; }
+          </style>
+        </head>
+        <body>
+          <h1>Order #${order.orderId} Bill</h1>
+          <p class="muted">Placed on: ${formatOrderDate(order.orderDate)}</p>
+          <p>Delivery Address: ${formatDeliveryAddress(order)}</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Price</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itemsHtml}
+            </tbody>
+          </table>
+          <div class="summary">
+            <div><span>Subtotal</span><span>₹${formatAmount(subtotal)}</span></div>
+            <div><span>Discount</span><span>- ₹${formatAmount(discount)}</span></div>
+            <div><strong>Total Paid</strong><strong>₹${formatAmount(totalPaid)}</strong></div>
+          </div>
+        </body>
+      </html>
+    `);
+    billWindow.document.close();
+    billWindow.focus();
+    billWindow.print();
   }
 
   function formatDeliveryAddress(order) {
@@ -169,6 +267,17 @@ export default function OrdersPage() {
   }
 }
 
+  const isDeliveryFormValid =
+    isAddressFieldValid(deliveryForm.fullAddress) &&
+    isAddressFieldValid(deliveryForm.city) &&
+    isAddressFieldValid(deliveryForm.state) &&
+    /^[0-9]{6}$/.test(deliveryForm.pincode) &&
+    (deliveryForm.landmark.trim() === "" ||
+      isAddressFieldValid(deliveryForm.landmark));
+
+  const addressValidationMessage =
+    "Use letters, numbers, and spaces only. Include at least one letter.";
+
   return (
     <div className="page orders-page">
       <header className="top-nav">
@@ -203,6 +312,67 @@ export default function OrdersPage() {
             )}
             <p>Placed On: {formatOrderDate(order.orderDate)}</p>
             <p>Delivery Address: {formatDeliveryAddress(order)}</p>
+
+            <div className="bill-actions">
+              <button
+                type="button"
+                onClick={() =>
+                  setExpandedBillId((prev) =>
+                    prev === order.orderId ? null : order.orderId,
+                  )
+                }
+              >
+                {expandedBillId === order.orderId ? "Hide Bill" : "View Bill"}
+              </button>
+              <button type="button" onClick={() => handlePrintBill(order)}>
+                Print Bill
+              </button>
+            </div>
+
+            {expandedBillId === order.orderId && (
+              <div className="bill-panel">
+                <div className="bill-header">
+                  <h4>Bill Details</h4>
+                  <span>Order #{order.orderId}</span>
+                </div>
+                <table className="bill-table">
+                  <thead>
+                    <tr>
+                      <th>Item</th>
+                      <th>Qty</th>
+                      <th>Price</th>
+                      <th>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {order.orderItems.map((item) => (
+                      <tr key={item.orderItemId}>
+                        <td>{item.productName}</td>
+                        <td>{item.quantity}</td>
+                        <td>₹{formatAmount(item.priceAtPurchase)}</td>
+                        <td>
+                          ₹{formatAmount(item.priceAtPurchase * item.quantity)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div className="bill-summary">
+                  <div>
+                    <span>Subtotal</span>
+                    <span>₹{formatAmount(getOrderSubtotal(order))}</span>
+                  </div>
+                  <div>
+                    <span>Discount</span>
+                    <span>- ₹{formatAmount(getOrderDiscount(order))}</span>
+                  </div>
+                  <div className="bill-total">
+                    <strong>Total Paid</strong>
+                    <strong>₹{formatAmount(order.totalAmountPaid)}</strong>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {order.status === "PLACED" && editingOrderId !== order.orderId && (
               <button type="button" onClick={() => startAddressEdit(order)}>
@@ -268,15 +438,13 @@ export default function OrdersPage() {
                   }
                 />
                 <div className="order-address-actions">
+                  {!isDeliveryFormValid && (
+                    <p className="error-text">{addressValidationMessage}</p>
+                  )}
                   <button
                     type="button"
                     onClick={() => saveDeliveryAddress(order.orderId)}
-                    disabled={
-                      deliveryForm.fullAddress.trim() === "" ||
-                      deliveryForm.city.trim() === "" ||
-                      deliveryForm.state.trim() === "" ||
-                      !/^[0-9]{6}$/.test(deliveryForm.pincode)
-                    }
+                    disabled={!isDeliveryFormValid}
                   >
                     Save Address
                   </button>

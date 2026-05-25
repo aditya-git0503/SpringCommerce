@@ -349,6 +349,63 @@ button:disabled {
   margin-top: 8px;
 }
 
+.bill-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 10px 0;
+}
+
+.bill-panel {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  background: #14191a;
+  margin-top: 10px;
+}
+
+.bill-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+
+.bill-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 12px;
+}
+
+.bill-table th,
+.bill-table td {
+  border: 1px solid var(--border);
+  padding: 8px;
+  text-align: left;
+  color: var(--text);
+}
+
+.bill-table th {
+  background: var(--surface-2);
+}
+
+.bill-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--text);
+}
+
+.bill-summary div {
+  display: flex;
+  justify-content: space-between;
+}
+
+.bill-total {
+  font-weight: 700;
+}
+
 .compact-form {
   margin-bottom: 10px;
 }
