@@ -17,6 +17,8 @@ export default function ProductsPage() {
   const [sortOrder, setSortOrder] = useState("");
   const [availability, setAvailability] = useState("");
   const [ratingFilter, setRatingFilter] = useState("");
+  const [priceFrom, setPriceFrom] = useState("");
+  const [priceTo, setPriceTo] = useState("");
 
   const [showCheckout, setShowCheckout] = useState(false);
   const [addresses, setAddresses] = useState([]);
@@ -269,7 +271,24 @@ export default function ProductsPage() {
   }, [addresses, addressSearch]);
 
   const filteredProducts = useMemo(() => {
+    const parsedFrom = Number.parseFloat(priceFrom.trim());
+    const parsedTo = Number.parseFloat(priceTo.trim());
+    const minPrice =
+      priceFrom.trim() === "" || Number.isNaN(parsedFrom) || parsedFrom < 0
+        ? null
+        : parsedFrom;
+    const maxPrice =
+      priceTo.trim() === "" || Number.isNaN(parsedTo) || parsedTo < 0
+        ? null
+        : parsedTo;
+    const hasInvalidRange =
+      minPrice !== null && maxPrice !== null && minPrice > maxPrice;
+
     return products.filter((product) => {
+      if (hasInvalidRange) {
+        return false;
+      }
+
       const matchesSearch = product.productName
         .toLowerCase()
         .includes(search.toLowerCase());
@@ -283,12 +302,19 @@ export default function ProductsPage() {
 
       const matchesRating =
         ratingFilter === "" || product.avgRating >= Number(ratingFilter);
+      const matchesMinPrice = minPrice === null || product.price >= minPrice;
+      const matchesMaxPrice = maxPrice === null || product.price <= maxPrice;
 
       return (
-        matchesSearch && matchesCategory && matchesAvailability && matchesRating
+        matchesSearch &&
+        matchesCategory &&
+        matchesAvailability &&
+        matchesRating &&
+        matchesMinPrice &&
+        matchesMaxPrice
       );
     });
-  }, [products, search, category, availability, ratingFilter]);
+  }, [products, search, category, availability, ratingFilter, priceFrom, priceTo]);
 
   const sortedProducts = useMemo(() => {
     const cloned = [...filteredProducts];
@@ -315,6 +341,16 @@ export default function ProductsPage() {
 
   function handleScrollToTop() {
     window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function clearProductFilters() {
+    setSearch("");
+    setCategory("");
+    setSortOrder("");
+    setAvailability("");
+    setRatingFilter("");
+    setPriceFrom("");
+    setPriceTo("");
   }
 
   return (
@@ -390,6 +426,28 @@ export default function ProductsPage() {
               <option value="3">3 & above</option>
               <option value="2">2 & above</option>
             </select>
+
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="From price"
+              value={priceFrom}
+              onChange={(event) => setPriceFrom(event.target.value)}
+            />
+
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="To price"
+              value={priceTo}
+              onChange={(event) => setPriceTo(event.target.value)}
+            />
+
+            <button type="button" onClick={clearProductFilters}>
+              Clear Filters
+            </button>
           </div>
 
           {loadingProducts && <p>Loading products...</p>}
