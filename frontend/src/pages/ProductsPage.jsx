@@ -1,12 +1,20 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import api from "../api/client.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { getApiErrorMessage } from "../utils/apiError.js";
+import {
+  addGuestCartItem,
+  getGuestCart,
+  getGuestCartId,
+  removeGuestCartItem,
+  updateGuestCartItem,
+} from "../utils/guestCart.js";
 
 export default function ProductsPage() {
   const navigate = useNavigate();
-  const { logout, user } = useAuth();
+  const location = useLocation();
+  const { isAuthenticated, logout, user } = useAuth();
 
   const [products, setProducts] = useState([]);
   const [cartItems, setCartItems] = useState([]);
@@ -42,15 +50,41 @@ export default function ProductsPage() {
 
   useEffect(() => {
     loadProducts();
-    loadCartItems();
   }, []);
 
   useEffect(() => {
-    if (!showCheckout) {
+    if (isAuthenticated) {
+      loadCartItems();
+      return;
+    }
+
+    loadGuestCartItems();
+    setShowCheckout(false);
+  }, [isAuthenticated, products]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (
+      !isAuthenticated ||
+      loadingCart ||
+      params.get("checkout") !== "1"
+    ) {
+      return;
+    }
+
+    if (cartItems.length > 0) {
+      setSelectedItems(cartItems.map((item) => item.cartId));
+      setShowCheckout(true);
+    }
+    navigate("/products", { replace: true });
+  }, [isAuthenticated, loadingCart, cartItems, location.search, navigate]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !showCheckout) {
       return;
     }
     loadAddresses();
-  }, [showCheckout]);
+  }, [isAuthenticated, showCheckout]);
 
   useEffect(() => {
     function onScroll() {
@@ -77,6 +111,11 @@ export default function ProductsPage() {
   }
 
   async function loadCartItems() {
+    if (!isAuthenticated) {
+      loadGuestCartItems();
+      return;
+    }
+
     try {
       setLoadingCart(true);
       const response = await api.get("/cart");
@@ -98,6 +137,44 @@ export default function ProductsPage() {
     } finally {
       setLoadingCart(false);
     }
+  }
+
+  function loadGuestCartItems() {
+    const productById = new Map(
+      products.map((product) => [product.productId, product]),
+    );
+    const items = getGuestCart()
+      .map((item) => {
+        const product = productById.get(item.productId);
+        if (!product) {
+          return null;
+        }
+
+        return {
+          cartId: getGuestCartId(item.productId),
+          quantity: Math.min(item.quantity, product.stockAmount),
+          productId: item.productId,
+          productName: product.productName,
+          price: product.price,
+          imageUrl: product.imageUrl,
+          stockAmount: product.stockAmount,
+        };
+      })
+      .filter(Boolean)
+      .filter((item) => item.quantity > 0);
+
+    const currentCartIds = items.map((item) => item.cartId);
+    setCartItems(items);
+    setSelectedItems((prevSelected) => {
+      const stillValidIds = prevSelected.filter((id) =>
+        currentCartIds.includes(id),
+      );
+      const newCartIds = currentCartIds.filter(
+        (id) => !prevSelected.includes(id),
+      );
+      return [...new Set([...stillValidIds, ...newCartIds])];
+    });
+    setLoadingCart(false);
   }
 
   async function loadAddresses() {
@@ -123,12 +200,33 @@ export default function ProductsPage() {
 
   function handleLogout() {
     logout();
-    navigate("/login");
+    navigate("/products");
   }
 
   async function handleAddToCart(productId) {
     try {
       setActionError("");
+      const product = products.find((item) => item.productId === productId);
+      if (!product) {
+        setActionError("Product not found");
+        return;
+      }
+
+      if (!isAuthenticated) {
+        const existingItem = getGuestCart().find(
+          (item) => item.productId === productId,
+        );
+        const nextQuantity = (existingItem?.quantity || 0) + 1;
+        if (nextQuantity > product.stockAmount) {
+          setActionError("Requested quantity exceeds available stock");
+          return;
+        }
+
+        addGuestCartItem(productId, 1);
+        loadGuestCartItems();
+        return;
+      }
+
       await api.post("/cart/add", {
         productId,
         quantity: 1,
@@ -140,9 +238,26 @@ export default function ProductsPage() {
     }
   }
 
-  async function handleUpdateQuantity(cartId, quantity) {
+  async function handleUpdateQuantity(cartId, quantity, productId) {
     try {
       setActionError("");
+      if (!isAuthenticated) {
+        const product = products.find((item) => item.productId === productId);
+        if (!product) {
+          setActionError("Product not found");
+          return;
+        }
+
+        if (quantity > product.stockAmount) {
+          setActionError("Requested quantity exceeds available stock");
+          return;
+        }
+
+        updateGuestCartItem(productId, quantity);
+        loadGuestCartItems();
+        return;
+      }
+
       await api.put("/cart/update", null, {
         params: { cartId, quantity },
       });
@@ -152,14 +267,32 @@ export default function ProductsPage() {
     }
   }
 
-  async function handleRemoveFromCart(cartId) {
+  async function handleRemoveFromCart(cartId, productId) {
     try {
       setActionError("");
+      if (!isAuthenticated) {
+        removeGuestCartItem(productId);
+        loadGuestCartItems();
+        return;
+      }
+
       await api.delete(`/cart/remove/${cartId}`);
       await loadCartItems();
     } catch (err) {
       setActionError(getApiErrorMessage(err, "Failed to remove cart item"));
     }
+  }
+
+  function handleCheckoutClick() {
+    setActionError("");
+    setActionSuccess("");
+
+    if (!isAuthenticated) {
+      navigate("/login?redirect=/products&checkout=1");
+      return;
+    }
+
+    setShowCheckout(true);
   }
 
   async function handleAddressSubmit(event) {
@@ -358,15 +491,23 @@ export default function ProductsPage() {
       <header className="top-nav">
         <div>
           <h2>Products</h2>
-          <p>{user?.name ? `Welcome, ${user.name}` : "Welcome"}</p>
+          <p>{user?.name ? `Welcome, ${user.name}` : "Welcome, guest"}</p>
         </div>
         <div className="nav-actions">
-          <button onClick={() => navigate("/orders")} type="button">
-            My Orders
-          </button>
-          <button onClick={handleLogout} type="button">
-            Logout
-          </button>
+          {isAuthenticated ? (
+            <>
+              <button onClick={() => navigate("/orders")} type="button">
+                My Orders
+              </button>
+              <button onClick={handleLogout} type="button">
+                Logout
+              </button>
+            </>
+          ) : (
+            <button onClick={() => navigate("/login")} type="button">
+              Sign In
+            </button>
+          )}
         </div>
       </header>
 
@@ -509,7 +650,13 @@ export default function ProductsPage() {
                   <button
                     type="button"
                     disabled={showCheckout}
-                    onClick={() => handleUpdateQuantity(item.cartId, item.quantity - 1)}
+                    onClick={() =>
+                      handleUpdateQuantity(
+                        item.cartId,
+                        item.quantity - 1,
+                        item.productId,
+                      )
+                    }
                   >
                     -
                   </button>
@@ -517,7 +664,13 @@ export default function ProductsPage() {
                   <button
                     type="button"
                     disabled={showCheckout}
-                    onClick={() => handleUpdateQuantity(item.cartId, item.quantity + 1)}
+                    onClick={() =>
+                      handleUpdateQuantity(
+                        item.cartId,
+                        item.quantity + 1,
+                        item.productId,
+                      )
+                    }
                   >
                     +
                   </button>
@@ -526,7 +679,7 @@ export default function ProductsPage() {
                 <button
                   type="button"
                   disabled={showCheckout}
-                  onClick={() => handleRemoveFromCart(item.cartId)}
+                  onClick={() => handleRemoveFromCart(item.cartId, item.productId)}
                 >
                   Remove
                 </button>
@@ -541,11 +694,7 @@ export default function ProductsPage() {
             <button
               type="button"
               disabled={selectedItems.length === 0}
-              onClick={() => {
-                setShowCheckout(true);
-                setActionError("");
-                setActionSuccess("");
-              }}
+              onClick={handleCheckoutClick}
             >
               Checkout
             </button>

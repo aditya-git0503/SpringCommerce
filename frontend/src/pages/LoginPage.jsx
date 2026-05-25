@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import api from "../api/client.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { getApiErrorMessage } from "../utils/apiError.js";
+import { clearGuestCart, getGuestCart } from "../utils/guestCart.js";
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { isAuthenticated, login } = useAuth();
 
   const [isRegisterMode, setIsRegisterMode] = useState(false);
@@ -33,11 +35,24 @@ export default function LoginPage() {
     confirmPassword: "",
   });
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/products");
+  const searchParams = new URLSearchParams(location.search);
+  const redirectPath = getSafeRedirectPath(searchParams.get("redirect"));
+  const shouldResumeCheckout = searchParams.get("checkout") === "1";
+
+  function getPostLoginPath() {
+    const nextParams = new URLSearchParams();
+    if (shouldResumeCheckout) {
+      nextParams.set("checkout", "1");
     }
-  }, [isAuthenticated, navigate]);
+    const query = nextParams.toString();
+    return query ? `${redirectPath}?${query}` : redirectPath;
+  }
+
+  useEffect(() => {
+    if (isAuthenticated && !loading && !error) {
+      navigate(getPostLoginPath(), { replace: true });
+    }
+  }, [isAuthenticated, loading, error, navigate]);
 
   function clearFeedback() {
     setMessage("");
@@ -52,13 +67,31 @@ export default function LoginPage() {
     try {
       const response = await api.post("/auth/login", loginForm);
       login(response.data);
+      await mergeGuestCart();
       setMessage(response.data.message || "Login successful");
-      navigate("/products");
+      navigate(getPostLoginPath(), { replace: true });
     } catch (err) {
       setError(getApiErrorMessage(err, "Login failed"));
     } finally {
       setLoading(false);
     }
+  }
+
+  async function mergeGuestCart() {
+    const guestCart = getGuestCart();
+    if (guestCart.length === 0) {
+      return;
+    }
+
+    await Promise.all(
+      guestCart.map((item) =>
+        api.post("/cart/add", {
+          productId: item.productId,
+          quantity: item.quantity,
+        }),
+      ),
+    );
+    clearGuestCart();
   }
 
   async function handleRegisterSubmit(event) {
@@ -356,4 +389,11 @@ export default function LoginPage() {
       </div>
     </div>
   );
+}
+
+function getSafeRedirectPath(value) {
+  if (!value || !value.startsWith("/") || value.startsWith("//")) {
+    return "/products";
+  }
+  return value;
 }
