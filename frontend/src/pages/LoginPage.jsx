@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import api from "../api/client.js";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -39,20 +39,20 @@ export default function LoginPage() {
   const redirectPath = getSafeRedirectPath(searchParams.get("redirect"));
   const shouldResumeCheckout = searchParams.get("checkout") === "1";
 
-  function getPostLoginPath() {
+  const postLoginPath = useMemo(() => {
     const nextParams = new URLSearchParams();
     if (shouldResumeCheckout) {
       nextParams.set("checkout", "1");
     }
     const query = nextParams.toString();
     return query ? `${redirectPath}?${query}` : redirectPath;
-  }
+  }, [redirectPath, shouldResumeCheckout]);
 
   useEffect(() => {
     if (isAuthenticated && !loading && !error) {
-      navigate(getPostLoginPath(), { replace: true });
+      navigate(postLoginPath, { replace: true });
     }
-  }, [isAuthenticated, loading, error, navigate]);
+  }, [isAuthenticated, loading, error, navigate, postLoginPath]);
 
   function clearFeedback() {
     setMessage("");
@@ -69,7 +69,7 @@ export default function LoginPage() {
       login(response.data);
       await mergeGuestCart();
       setMessage(response.data.message || "Login successful");
-      navigate(getPostLoginPath(), { replace: true });
+      navigate(postLoginPath, { replace: true });
     } catch (err) {
       setError(getApiErrorMessage(err, "Login failed"));
     } finally {

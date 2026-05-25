@@ -15,6 +15,7 @@ public class ProductResponseDTO {
     private String imageUrl;
     private int totalBuyers;
     private float avgRating;
+    private int ratingCount;
     private String description;
     private String category;
 }

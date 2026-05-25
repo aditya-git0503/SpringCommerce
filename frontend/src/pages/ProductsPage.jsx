@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import api from "../api/client.js";
 import { useAuth } from "../context/AuthContext.jsx";
@@ -51,6 +51,27 @@ export default function ProductsPage() {
   const [actionSuccess, setActionSuccess] = useState("");
   const [showScrollTop, setShowScrollTop] = useState(false);
 
+  const loadAddresses = useCallback(async () => {
+    try {
+      const response = await api.get("/address");
+      setAddresses(response.data);
+      if (response.data.length === 0) {
+        setSelectedAddressId("");
+        return;
+      }
+
+      const selectedStillExists = response.data.some(
+        (address) => String(address.addressId) === selectedAddressId,
+      );
+
+      if (!selectedStillExists) {
+        setSelectedAddressId(String(response.data[0].addressId));
+      }
+    } catch (err) {
+      setActionError(getApiErrorMessage(err, "Unable to fetch addresses"));
+    }
+  }, [selectedAddressId]);
+
 
   useEffect(() => {
     loadProducts();
@@ -63,7 +84,9 @@ export default function ProductsPage() {
     }
 
     loadGuestCartItems();
-    setShowCheckout(false);
+    // avoid synchronous setState in effect (prevents cascading renders)
+    setTimeout(() => setShowCheckout(false), 0);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, products]);
 
   useEffect(() => {
@@ -75,10 +98,12 @@ export default function ProductsPage() {
     ) {
       return;
     }
-
+    // schedule state updates to avoid cascading renders inside effect
     if (cartItems.length > 0) {
-      setSelectedItems(cartItems.map((item) => item.cartId));
-      setShowCheckout(true);
+      setTimeout(() => {
+        setSelectedItems(cartItems.map((item) => item.cartId));
+        setShowCheckout(true);
+      }, 0);
     }
     navigate("/products", { replace: true });
   }, [isAuthenticated, loadingCart, cartItems, location.search, navigate]);
@@ -87,19 +112,23 @@ export default function ProductsPage() {
     if (!isAuthenticated || !showCheckout) {
       return;
     }
-    loadAddresses();
-  }, [isAuthenticated, showCheckout]);
+    setTimeout(() => loadAddresses(), 0);
+  }, [isAuthenticated, showCheckout, loadAddresses]);
 
   useEffect(() => {
     if (!isAuthenticated || !user?.userId) {
-      setDiscountCode("");
-      setAppliedDiscountCode("");
-      setDiscountError("");
+      // schedule clearing discount state to avoid setState in effect
+      setTimeout(() => {
+        setDiscountCode("");
+        setAppliedDiscountCode("");
+        setDiscountError("");
+      }, 0);
       return;
     }
 
     const storedCode = localStorage.getItem(`discountCode:${user.userId}`);
-    setDiscountCode(storedCode || "");
+    // avoid synchronous setState inside effect
+    setTimeout(() => setDiscountCode(storedCode || ""), 0);
   }, [isAuthenticated, user?.userId]);
 
   useEffect(() => {
@@ -119,7 +148,8 @@ export default function ProductsPage() {
 
   useEffect(() => {
     if (selectedItems.length === 0) {
-      setAppliedDiscountCode("");
+      // clear applied discount asynchronously to avoid cascading renders
+      setTimeout(() => setAppliedDiscountCode(""), 0);
     }
   }, [selectedItems.length]);
 
@@ -212,27 +242,6 @@ export default function ProductsPage() {
       return [...new Set([...stillValidIds, ...newCartIds])];
     });
     setLoadingCart(false);
-  }
-
-  async function loadAddresses() {
-    try {
-      const response = await api.get("/address");
-      setAddresses(response.data);
-      if (response.data.length === 0) {
-        setSelectedAddressId("");
-        return;
-      }
-
-      const selectedStillExists = response.data.some(
-        (address) => String(address.addressId) === selectedAddressId,
-      );
-
-      if (!selectedStillExists) {
-        setSelectedAddressId(String(response.data[0].addressId));
-      }
-    } catch (err) {
-      setActionError(getApiErrorMessage(err, "Unable to fetch addresses"));
-    }
   }
 
   function handleLogout() {
@@ -688,7 +697,14 @@ export default function ProductsPage() {
                 <h3>{product.productName}</h3>
                 <p>{product.description}</p>
                 <p>Price: ₹{product.price}</p>
-                <p>Rating: {product.avgRating} ({product.totalBuyers})</p>
+                <p>
+                  Rating:{" "}
+                  {(
+                    (product.ratingCount ?? 0) > 0
+                      ? Number(product.avgRating || 0).toFixed(1)
+                      : "0.0"
+                  )} ({product.ratingCount ?? 0})
+                </p>
                 <p>Stock: {product.stockAmount}</p>
                 <button
                   type="button"

@@ -26,6 +26,7 @@ public class ProductService {
                 product.getImageUrl(),
                 product.getTotalBuyers(),
                 product.getAvgRating(),
+            product.getRatingCount(),
                 product.getDescription(),
                 product.getCategory()
         );
