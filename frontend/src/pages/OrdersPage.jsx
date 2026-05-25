@@ -196,7 +196,11 @@ export default function OrdersPage() {
           <article key={order.orderId} className="order-card">
             <h3>Order #{order.orderId}</h3>
             <p>Status: {formatStatus(order.status)}</p>
-            <p>Amount Paid: ₹{order.totalAmountPaid}</p>
+            {order.discountAmount != null && order.discountAmount > 0 ? (
+              <p>Discounted amount: ₹{order.totalAmountPaid}</p>
+            ) : (
+              <p>Amount Paid: ₹{order.totalAmountPaid}</p>
+            )}
             <p>Placed On: {formatOrderDate(order.orderDate)}</p>
             <p>Delivery Address: {formatDeliveryAddress(order)}</p>
 

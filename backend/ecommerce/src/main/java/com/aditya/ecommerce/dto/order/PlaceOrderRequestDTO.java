@@ -12,4 +12,5 @@ import java.util.List;
 public class PlaceOrderRequestDTO {
     private int addressId;
     private List<Integer> cartItemIds;
+    private String discountCode;
 }

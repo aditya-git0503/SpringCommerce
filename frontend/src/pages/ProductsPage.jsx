@@ -19,6 +19,9 @@ export default function ProductsPage() {
   const [products, setProducts] = useState([]);
   const [cartItems, setCartItems] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
+  const [discountCode, setDiscountCode] = useState("");
+  const [appliedDiscountCode, setAppliedDiscountCode] = useState("");
+  const [discountError, setDiscountError] = useState("");
 
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
@@ -85,6 +88,39 @@ export default function ProductsPage() {
     }
     loadAddresses();
   }, [isAuthenticated, showCheckout]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !user?.userId) {
+      setDiscountCode("");
+      setAppliedDiscountCode("");
+      setDiscountError("");
+      return;
+    }
+
+    const storedCode = localStorage.getItem(`discountCode:${user.userId}`);
+    setDiscountCode(storedCode || "");
+  }, [isAuthenticated, user?.userId]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !user?.userId) {
+      return;
+    }
+
+    const trimmedCode = discountCode.trim();
+    const storageKey = `discountCode:${user.userId}`;
+    if (trimmedCode === "") {
+      localStorage.removeItem(storageKey);
+      return;
+    }
+
+    localStorage.setItem(storageKey, trimmedCode);
+  }, [discountCode, isAuthenticated, user?.userId]);
+
+  useEffect(() => {
+    if (selectedItems.length === 0) {
+      setAppliedDiscountCode("");
+    }
+  }, [selectedItems.length]);
 
   useEffect(() => {
     function onScroll() {
@@ -367,10 +403,18 @@ export default function ProductsPage() {
       await api.post("/order/place", {
         addressId: Number(selectedAddressId),
         cartItemIds: selectedItems,
+        discountCode:
+          appliedDiscountCode.trim() === "" ? null : appliedDiscountCode.trim(),
       });
       setActionSuccess("Order placed successfully");
       await Promise.all([loadCartItems(), loadProducts()]);
       setShowCheckout(false);
+      // clear discount input and applied code after placing order
+      setDiscountCode("");
+      setAppliedDiscountCode("");
+      if (isAuthenticated && user?.userId) {
+        localStorage.removeItem(`discountCode:${user.userId}`);
+      }
     } catch (err) {
       setActionError(getApiErrorMessage(err, "Failed to place order"));
     }
@@ -464,6 +508,16 @@ export default function ProductsPage() {
     .filter((item) => selectedItems.includes(item.cartId))
     .reduce((total, item) => total + item.price * item.quantity, 0);
 
+  const noSelectionError = "Select at least one cart item to apply a discount.";
+  const hasSelectedItems = selectedItems.length > 0;
+  const normalizedAppliedCode = appliedDiscountCode.trim();
+  const isDiscountValid =
+    normalizedAppliedCode !== "" &&
+    normalizedAppliedCode.toLowerCase() === "welcome10";
+  const discountAmount = isDiscountValid ? selectedTotal * 0.1 : 0;
+  const discountedTotal = Math.max(0, selectedTotal - discountAmount);
+  const shouldShowDiscountSummary = isDiscountValid && selectedTotal > 0;
+
   const canPlaceOrder = selectedItems.length > 0 && Boolean(selectedAddressId);
 
   const isAddressFormValid =
@@ -484,6 +538,35 @@ export default function ProductsPage() {
     setRatingFilter("");
     setPriceFrom("");
     setPriceTo("");
+  }
+
+  function handleApplyDiscount() {
+    setDiscountError("");
+
+    if (!hasSelectedItems) {
+      setDiscountError(noSelectionError);
+      return;
+    }
+
+    const trimmedCode = discountCode.trim();
+    if (trimmedCode === "") {
+      setAppliedDiscountCode("");
+      setDiscountError("Enter a discount code.");
+      return;
+    }
+
+    if (trimmedCode.toLowerCase() !== "welcome10") {
+      setAppliedDiscountCode("");
+      setDiscountError("Invalid discount code.");
+      return;
+    }
+
+    setAppliedDiscountCode(trimmedCode);
+    setDiscountError("");
+  }
+
+  function formatAmount(amount) {
+    return Number.isInteger(amount) ? amount.toFixed(0) : amount.toFixed(2);
   }
 
   return (
@@ -686,9 +769,54 @@ export default function ProductsPage() {
               </div>
             ))}
 
-          <p>
-            <strong>Selected total: ₹{selectedTotal}</strong>
-          </p>
+          <div className="price-summary">
+            {shouldShowDiscountSummary ? (
+              <>
+                <p className="price-original">
+                  Selected total: ₹{formatAmount(selectedTotal)}
+                </p>
+                <p className="discount-line">
+                  - ₹{formatAmount(discountAmount)}
+                </p>
+                <p className="price-final">
+                  Total after discount: ₹{formatAmount(discountedTotal)}
+                </p>
+              </>
+            ) : (
+              <p className="price-final">
+                Selected total: ₹{formatAmount(selectedTotal)}
+              </p>
+            )}
+          </div>
+
+          {isAuthenticated && (
+            <div className="discount-code">
+              <label htmlFor="discount-code-input">Discount code</label>
+              <div className="discount-row">
+                <input
+                  id="discount-code-input"
+                  type="text"
+                  placeholder="Enter discount code"
+                  value={discountCode}
+                  onChange={(event) => setDiscountCode(event.target.value)}
+                  disabled={!hasSelectedItems}
+                />
+                <button
+                  type="button"
+                  onClick={handleApplyDiscount}
+                  disabled={!hasSelectedItems}
+                >
+                  Apply discount
+                </button>
+              </div>
+              {!hasSelectedItems && (
+                <p className="discount-error">{noSelectionError}</p>
+              )}
+              {discountError && hasSelectedItems && (
+                <p className="discount-error">{discountError}</p>
+              )}
+            </div>
+          )}
 
           <div className="cart-action-row">
             <button
@@ -781,22 +909,9 @@ export default function ProductsPage() {
                     }))
                   }
                 />
-                <input
-                  type="text"
-                  placeholder="City"
-                  value={addressForm.city}
-                  onChange={(event) =>
-                    setAddressForm((prev) => ({ ...prev, city: event.target.value }))
-                  }
-                />
-                <input
-                  type="text"
-                  placeholder="State"
-                  value={addressForm.state}
-                  onChange={(event) =>
-                    setAddressForm((prev) => ({ ...prev, state: event.target.value }))
-                  }
-                />
+
+                
+
                 <input
                   type="text"
                   placeholder="Pincode (6 digits)"

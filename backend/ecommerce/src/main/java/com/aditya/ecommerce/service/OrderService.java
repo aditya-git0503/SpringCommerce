@@ -23,6 +23,9 @@ import java.util.concurrent.ThreadLocalRandom;
 @Service
 public class OrderService {
 
+    private static final String DISCOUNT_CODE = "WELCOME10";
+    private static final float DISCOUNT_RATE = 0.10f;
+
     private final OrderRepo orderRepo;
     private final OrderItemRepo orderItemRepo;
     private final CartItemRepo cartItemRepo;
@@ -82,21 +85,29 @@ public class OrderService {
             addressId = order.getAddress().getAddressId();
         }
 
+        float finalAmount = order.getTotalAmountPaid();
+        if (order.getOriginalAmount() != null && order.getDiscountAmount() != null
+            && order.getDiscountAmount() > 0f) {
+            finalAmount = Math.max(0f, order.getOriginalAmount() - order.getDiscountAmount());
+        }
+
         return new OrderResponseDTO(
-                order.getOrderId(),
-                order.getTotalAmountPaid(),
-                order.getOrderDate(),
-                order.getStatus(),
-                addressId,
-                fullAddress,
-                city,
-                state,
-                pincode,
-                landmark,
-                order.getOrderItems()
-                        .stream()
-                        .map(item -> mapOrderItemToDTO(item, user))
-                        .toList()
+            order.getOrderId(),
+            finalAmount,
+            order.getOriginalAmount(),
+            order.getDiscountAmount(),
+            order.getOrderDate(),
+            order.getStatus(),
+            addressId,
+            fullAddress,
+            city,
+            state,
+            pincode,
+            landmark,
+            order.getOrderItems()
+                .stream()
+                .map(item -> mapOrderItemToDTO(item, user))
+                .toList()
         );
     }
 
@@ -192,6 +203,23 @@ public class OrderService {
             orderItems.add(orderItem);
         }
 
+        // record original amount before any discounts
+        float originalAmount = amount;
+
+        String discountCode = request.getDiscountCode();
+        float appliedDiscount = 0f;
+        if (discountCode != null && !discountCode.isBlank()) {
+            String normalizedCode = discountCode.trim();
+            if (!DISCOUNT_CODE.equalsIgnoreCase(normalizedCode)) {
+                throw new BadRequestException("Invalid discount code");
+            }
+            appliedDiscount = amount * DISCOUNT_RATE;
+            amount = Math.max(0f, amount - appliedDiscount);
+            order.setDiscountCode(normalizedCode);
+        }
+
+        order.setOriginalAmount(originalAmount);
+        order.setDiscountAmount(appliedDiscount);
         order.setTotalAmountPaid(amount);
 
         order.setOrderItems(orderItems);

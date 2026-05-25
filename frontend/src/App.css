@@ -63,6 +63,7 @@
 .form select,
 .filters-row input,
 .filters-row select,
+.discount-code input,
 textarea {
   width: 100%;
   padding: 10px 12px;
@@ -74,6 +75,7 @@ textarea {
 
 .form input::placeholder,
 .filters-row input::placeholder,
+.discount-code input::placeholder,
 textarea::placeholder {
   color: #95a4a8;
 }
@@ -82,6 +84,7 @@ textarea::placeholder {
 .form select:focus,
 .filters-row input:focus,
 .filters-row select:focus,
+.discount-code input:focus,
 textarea:focus {
   outline: none;
   border-color: var(--accent);
@@ -238,6 +241,54 @@ button:disabled {
   margin-top: 12px;
   border-top: 1px solid var(--border);
   padding-top: 12px;
+}
+
+.price-summary {
+  margin: 10px 0 12px;
+}
+
+.price-original {
+  color: var(--muted);
+  text-decoration: line-through;
+  margin: 4px 0;
+}
+
+.discount-line {
+  color: #a3afb3;
+  margin: 4px 0;
+}
+
+.price-final {
+  color: var(--text);
+  font-weight: 700;
+  margin: 4px 0;
+}
+
+.discount-code {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.discount-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.discount-row input {
+  flex: 1;
+}
+
+.discount-code label {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.discount-error {
+  color: var(--danger);
+  margin: 0;
 }
 
 .checkout-box h4,

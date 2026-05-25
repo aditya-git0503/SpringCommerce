@@ -33,6 +33,14 @@ public class Orders {
     @PositiveOrZero(message = "Amount cannot be negative")
     private float totalAmountPaid;
 
+    @PositiveOrZero(message = "Amount cannot be negative")
+    private Float originalAmount;
+
+    @PositiveOrZero(message = "Amount cannot be negative")
+    private Float discountAmount;
+
+    private String discountCode;
+
     private LocalDateTime orderDate;
 
     private String status;
