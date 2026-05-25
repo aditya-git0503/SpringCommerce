@@ -52,4 +52,4 @@ Frontend runs on http://localhost:5173 by default.
 
 ## Notes
 - Seed data lives in data.sql.
-- Discount code is WELCOME10.
+- Test discount code is WELCOME10.
