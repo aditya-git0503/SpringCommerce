@@ -16,7 +16,3 @@ backend/**/target
 .env
 .env.*
 !.env.example
-
-prd.txt
-thoughts.txt
-plan.md
