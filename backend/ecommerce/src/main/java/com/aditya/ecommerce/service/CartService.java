@@ -10,6 +10,7 @@ import com.aditya.ecommerce.exception.ForbiddenException;
 import com.aditya.ecommerce.exception.ResourceNotFoundException;
 import com.aditya.ecommerce.repo.CartItemRepo;
 import com.aditya.ecommerce.repo.ProductRepo;
+import com.aditya.ecommerce.repo.UserRepo;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -20,10 +21,12 @@ public class CartService {
 
     private final CartItemRepo cartItemRepo;
     private final ProductRepo productRepo;
+    private final UserRepo userRepo;
 
-    public CartService(CartItemRepo cartItemRepo, ProductRepo productRepo) {
+    public CartService(CartItemRepo cartItemRepo, ProductRepo productRepo, UserRepo userRepo) {
         this.cartItemRepo = cartItemRepo;
         this.productRepo = productRepo;
+        this.userRepo = userRepo;
     }
 
     private CartResponseDTO mapToDTO(CartItem item){
@@ -38,7 +41,10 @@ public class CartService {
         );
     }
 
-    public String addToCart(User user, int productId, int quantity){
+    public String addToCart(String email, int productId, int quantity){
+
+        User user = userRepo.findByUserEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         Product confirmedProduct = productRepo.findById(productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
@@ -79,7 +85,10 @@ public class CartService {
         return "Product Added to Cart!";
     }
 
-    public List<CartResponseDTO> getCartItems(User user){
+    public List<CartResponseDTO> getCartItems(String email){
+
+        User user = userRepo.findByUserEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         return cartItemRepo.findByUserOrderByCartIdAsc(user)
                 .stream()
@@ -87,7 +96,10 @@ public class CartService {
                 .toList();
     }
 
-    public String removeFromCart(User user, int cartId) {
+    public String removeFromCart(String email, int cartId) {
+
+        User user = userRepo.findByUserEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         CartItem cartItem = cartItemRepo.findById(cartId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart item not found"));
@@ -100,7 +112,10 @@ public class CartService {
         return "Item removed from cart";
     }
 
-    public String updateQuantity(User user, int cartId, int quantity) {
+    public String updateQuantity(String email, int cartId, int quantity) {
+
+        User user = userRepo.findByUserEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         CartItem existingCartItem = cartItemRepo.findById(cartId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cart Item not found"));

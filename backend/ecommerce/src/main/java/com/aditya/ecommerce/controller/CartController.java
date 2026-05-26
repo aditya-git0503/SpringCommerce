@@ -2,12 +2,8 @@ package com.aditya.ecommerce.controller;
 
 import com.aditya.ecommerce.dto.cart.AddToCartRequestDTO;
 import com.aditya.ecommerce.dto.cart.CartResponseDTO;
-import com.aditya.ecommerce.entity.User;
-import com.aditya.ecommerce.exception.ResourceNotFoundException;
-import com.aditya.ecommerce.repo.UserRepo;
+import com.aditya.ecommerce.security.AuthUtil;
 import com.aditya.ecommerce.service.CartService;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,27 +11,17 @@ import java.util.List;
 @RestController
 public class CartController {
 
-    private final UserRepo userRepo;
     private final CartService cartService;
 
-    public CartController(UserRepo userRepo, CartService cartService) {
-        this.userRepo = userRepo;
+    public CartController(CartService cartService) {
         this.cartService = cartService;
     }
 
     @PostMapping("/cart/add")
     public String addToCart(@RequestBody AddToCartRequestDTO request){
-
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
-
-        String email = authentication.getName();
-
-        User user = userRepo.findByUserEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
+        String email = AuthUtil.getAuthenticatedEmail();
         return cartService.addToCart(
-                user,
+                email,
                 request.getProductId(),
                 request.getQuantity()
         );
@@ -43,29 +29,14 @@ public class CartController {
 
     @GetMapping("/cart")
     public List<CartResponseDTO> getCartItems(){
-
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
-
-        String email = authentication.getName();
-
-        User user = userRepo.findByUserEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        return cartService.getCartItems(user);
+        String email = AuthUtil.getAuthenticatedEmail();
+        return cartService.getCartItems(email);
     }
 
     @DeleteMapping("/cart/remove/{cartId}")
     public String removeFromCart(@PathVariable int cartId) {
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
-
-        String email = authentication.getName();
-
-        User user = userRepo.findByUserEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        return cartService.removeFromCart(user, cartId);
+        String email = AuthUtil.getAuthenticatedEmail();
+        return cartService.removeFromCart(email, cartId);
     }
 
     @PutMapping("/cart/update")
@@ -73,14 +44,7 @@ public class CartController {
             @RequestParam int cartId,
             @RequestParam int quantity
     ) {
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
-
-        String email = authentication.getName();
-
-        User user = userRepo.findByUserEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-
-        return cartService.updateQuantity(user, cartId, quantity);
+        String email = AuthUtil.getAuthenticatedEmail();
+        return cartService.updateQuantity(email, cartId, quantity);
     }
 }

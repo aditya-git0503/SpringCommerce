@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import api from "../api/client.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { getApiErrorMessage } from "../utils/apiError.js";
+import { formatAmount } from "../utils/format.js";
+import { useScrollToTop } from "../utils/useScrollToTop.js";
 
 export default function OrdersPage() {
   const navigate = useNavigate();
@@ -11,7 +13,7 @@ export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [showScrollTop, setShowScrollTop] = useState(false);
+  const { showScrollTop, handleScrollToTop } = useScrollToTop();
   const [editingOrderId, setEditingOrderId] = useState(null);
   const [expandedBillId, setExpandedBillId] = useState(null);
   const [deliveryForm, setDeliveryForm] = useState({
@@ -42,15 +44,6 @@ export default function OrdersPage() {
     loadOrders();
   }, []);
 
-  useEffect(() => {
-    function onScroll() {
-      setShowScrollTop(window.scrollY > 320);
-    }
-
-    window.addEventListener("scroll", onScroll);
-    onScroll();
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   function handleLogout() {
     logout();
@@ -77,9 +70,6 @@ export default function OrdersPage() {
     return `${month}/${day}/${year}, ${displayHour}:${minute} ${meridian}`;
   }
 
-  function handleScrollToTop() {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
 
   function formatStatus(status) {
     if (!status) {
@@ -89,9 +79,6 @@ export default function OrdersPage() {
   }
 
 
-  function formatAmount(amount) {
-    return Number.isInteger(amount) ? amount.toFixed(0) : amount.toFixed(2);
-  }
 
   function getOrderSubtotal(order) {
     if (order.originalAmount != null) {

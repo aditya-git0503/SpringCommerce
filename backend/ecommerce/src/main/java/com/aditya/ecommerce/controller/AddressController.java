@@ -2,9 +2,8 @@ package com.aditya.ecommerce.controller;
 
 import com.aditya.ecommerce.dto.address.AddressResponseDTO;
 import com.aditya.ecommerce.entity.Address;
+import com.aditya.ecommerce.security.AuthUtil;
 import com.aditya.ecommerce.service.AddressService;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,33 +18,25 @@ public class AddressController {
 
     @PostMapping("/address/add")
     public String addAddress(@RequestBody Address address) {
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
+        String email = AuthUtil.getAuthenticatedEmail();
         return addressService.addAddress(email, address);
     }
 
     @GetMapping("/address")
     public List<AddressResponseDTO> getUserAddress() {
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
+        String email = AuthUtil.getAuthenticatedEmail();
         return addressService.getUserAddress(email);
     }
 
     @PutMapping("/address/{addressId}")
     public String updateAddress(@PathVariable int addressId, @RequestBody Address address) {
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
+        String email = AuthUtil.getAuthenticatedEmail();
         return addressService.updateAddress(email, addressId, address);
     }
 
     @DeleteMapping("/address/{addressId}")
     public String deleteAddress(@PathVariable int addressId) {
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
-        String email = authentication.getName();
+        String email = AuthUtil.getAuthenticatedEmail();
         return addressService.deleteAddress(email, addressId);
     }
 }

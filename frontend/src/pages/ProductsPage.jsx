@@ -10,6 +10,8 @@ import {
   removeGuestCartItem,
   updateGuestCartItem,
 } from "../utils/guestCart.js";
+import { formatAmount } from "../utils/format.js";
+import { useScrollToTop } from "../utils/useScrollToTop.js";
 
 export default function ProductsPage() {
   const navigate = useNavigate();
@@ -49,7 +51,7 @@ export default function ProductsPage() {
   const [loadingCart, setLoadingCart] = useState(true);
   const [actionError, setActionError] = useState("");
   const [actionSuccess, setActionSuccess] = useState("");
-  const [showScrollTop, setShowScrollTop] = useState(false);
+  const { showScrollTop, handleScrollToTop } = useScrollToTop();
 
   const loadAddresses = useCallback(async () => {
     try {
@@ -153,15 +155,6 @@ export default function ProductsPage() {
     }
   }, [selectedItems.length]);
 
-  useEffect(() => {
-    function onScroll() {
-      setShowScrollTop(window.scrollY > 320);
-    }
-
-    window.addEventListener("scroll", onScroll);
-    onScroll();
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
 
   async function loadProducts() {
     try {
@@ -536,9 +529,6 @@ export default function ProductsPage() {
     addressForm.state.trim() !== "" &&
     /^\d{6}$/.test(addressForm.pincode);
 
-  function handleScrollToTop() {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }
 
   function clearProductFilters() {
     setSearch("");
@@ -575,9 +565,6 @@ export default function ProductsPage() {
     setDiscountError("");
   }
 
-  function formatAmount(amount) {
-    return Number.isInteger(amount) ? amount.toFixed(0) : amount.toFixed(2);
-  }
 
   return (
     <div className="page products-page">
