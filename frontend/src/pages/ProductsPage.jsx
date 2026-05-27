@@ -51,6 +51,7 @@ export default function ProductsPage() {
   const [loadingCart, setLoadingCart] = useState(true);
   const [actionError, setActionError] = useState("");
   const [actionSuccess, setActionSuccess] = useState("");
+  const [addingToCartIds, setAddingToCartIds] = useState(new Set());
   const { showScrollTop, handleScrollToTop } = useScrollToTop();
 
   const loadAddresses = useCallback(async () => {
@@ -76,8 +77,12 @@ export default function ProductsPage() {
 
 
   useEffect(() => {
-    loadProducts();
-  }, []);
+    const timer = setTimeout(() => {
+      loadProducts();
+    }, 400);
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, category, sortOrder, availability, ratingFilter, priceFrom, priceTo]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -86,9 +91,7 @@ export default function ProductsPage() {
     }
 
     loadGuestCartItems();
-    // avoid synchronous setState in effect (prevents cascading renders)
     setTimeout(() => setShowCheckout(false), 0);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, products]);
 
   useEffect(() => {
@@ -119,7 +122,6 @@ export default function ProductsPage() {
 
   useEffect(() => {
     if (!isAuthenticated || !user?.userId) {
-      // schedule clearing discount state to avoid setState in effect
       setTimeout(() => {
         setDiscountCode("");
         setAppliedDiscountCode("");
@@ -129,7 +131,6 @@ export default function ProductsPage() {
     }
 
     const storedCode = localStorage.getItem(`discountCode:${user.userId}`);
-    // avoid synchronous setState inside effect
     setTimeout(() => setDiscountCode(storedCode || ""), 0);
   }, [isAuthenticated, user?.userId]);
 
@@ -150,7 +151,6 @@ export default function ProductsPage() {
 
   useEffect(() => {
     if (selectedItems.length === 0) {
-      // clear applied discount asynchronously to avoid cascading renders
       setTimeout(() => setAppliedDiscountCode(""), 0);
     }
   }, [selectedItems.length]);
@@ -159,10 +159,52 @@ export default function ProductsPage() {
   async function loadProducts() {
     try {
       setLoadingProducts(true);
-      const response = await api.get("/products");
-      setProducts(
-        [...response.data].sort((a, b) => a.productId - b.productId),
-      );
+      let response;
+
+      if (search.trim()) {
+        response = await api.get("/products/search", {
+          params: { keyword: search.trim() },
+        });
+      } else if (priceFrom.trim() || priceTo.trim()) {
+        const parsedFrom = Number.parseFloat(priceFrom.trim());
+        const parsedTo = Number.parseFloat(priceTo.trim());
+        const minPrice = Number.isNaN(parsedFrom) || parsedFrom < 0 ? 0 : parsedFrom;
+        const maxPrice = Number.isNaN(parsedTo) || parsedTo < 0 ? 999999999 : parsedTo;
+        if (minPrice > maxPrice) {
+          setProducts([]);
+          return;
+        }
+        response = await api.get("/products/filter", {
+          params: { minPrice, maxPrice },
+        });
+      } else if (ratingFilter) {
+        response = await api.get("/products/rating", {
+          params: { minRating: ratingFilter },
+        });
+      } else if (availability === "inStock") {
+        response = await api.get("/products/available");
+      } else if (availability === "outOfStock") {
+        response = await api.get("/products/out-of-stock");
+      } else if (category) {
+        response = await api.get("/products/category", {
+          params: { name: category },
+        });
+      } else if (sortOrder === "lowToHigh") {
+        response = await api.get("/products/sort/price-asc");
+      } else if (sortOrder === "highToLow") {
+        response = await api.get("/products/sort/price-desc");
+      } else {
+        response = await api.get("/products");
+      }
+
+      const isSortedByBackend = sortOrder === "lowToHigh" || sortOrder === "highToLow";
+      if (isSortedByBackend) {
+        setProducts(response.data);
+      } else {
+        setProducts(
+          [...response.data].sort((a, b) => a.productId - b.productId),
+        );
+      }
     } catch (err) {
       setActionError(getApiErrorMessage(err, "Unable to fetch products"));
     } finally {
@@ -243,8 +285,12 @@ export default function ProductsPage() {
   }
 
   async function handleAddToCart(productId) {
+    if (addingToCartIds.has(productId)) return;
+
     try {
       setActionError("");
+      setAddingToCartIds((prev) => new Set(prev).add(productId));
+
       const product = products.find((item) => item.productId === productId);
       if (!product) {
         setActionError("Product not found");
@@ -270,10 +316,15 @@ export default function ProductsPage() {
         productId,
         quantity: 1,
       });
-      // setActionSuccess("Product added to cart");
       await loadCartItems();
     } catch (err) {
       setActionError(getApiErrorMessage(err, "Failed to add to cart"));
+    } finally {
+      setAddingToCartIds((prev) => {
+        const next = new Set(prev);
+        next.delete(productId);
+        return next;
+      });
     }
   }
 
@@ -412,7 +463,6 @@ export default function ProductsPage() {
       setActionSuccess("Order placed successfully");
       await Promise.all([loadCartItems(), loadProducts()]);
       setShowCheckout(false);
-      // clear discount input and applied code after placing order
       setDiscountCode("");
       setAppliedDiscountCode("");
       if (isAuthenticated && user?.userId) {
@@ -450,62 +500,7 @@ export default function ProductsPage() {
     });
   }, [addresses, addressSearch]);
 
-  const filteredProducts = useMemo(() => {
-    const parsedFrom = Number.parseFloat(priceFrom.trim());
-    const parsedTo = Number.parseFloat(priceTo.trim());
-    const minPrice =
-      priceFrom.trim() === "" || Number.isNaN(parsedFrom) || parsedFrom < 0
-        ? null
-        : parsedFrom;
-    const maxPrice =
-      priceTo.trim() === "" || Number.isNaN(parsedTo) || parsedTo < 0
-        ? null
-        : parsedTo;
-    const hasInvalidRange =
-      minPrice !== null && maxPrice !== null && minPrice > maxPrice;
-
-    return products.filter((product) => {
-      if (hasInvalidRange) {
-        return false;
-      }
-
-      const matchesSearch = product.productName
-        .toLowerCase()
-        .includes(search.toLowerCase());
-
-      const matchesCategory = category === "" || product.category === category;
-
-      const matchesAvailability =
-        availability === "" ||
-        (availability === "inStock" && product.stockAmount > 0) ||
-        (availability === "outOfStock" && product.stockAmount === 0);
-
-      const matchesRating =
-        ratingFilter === "" || product.avgRating >= Number(ratingFilter);
-      const matchesMinPrice = minPrice === null || product.price >= minPrice;
-      const matchesMaxPrice = maxPrice === null || product.price <= maxPrice;
-
-      return (
-        matchesSearch &&
-        matchesCategory &&
-        matchesAvailability &&
-        matchesRating &&
-        matchesMinPrice &&
-        matchesMaxPrice
-      );
-    });
-  }, [products, search, category, availability, ratingFilter, priceFrom, priceTo]);
-
-  const sortedProducts = useMemo(() => {
-    const cloned = [...filteredProducts];
-    if (sortOrder === "lowToHigh") {
-      return cloned.sort((a, b) => a.price - b.price);
-    }
-    if (sortOrder === "highToLow") {
-      return cloned.sort((a, b) => b.price - a.price);
-    }
-    return cloned.sort((a, b) => a.productId - b.productId);
-  }, [filteredProducts, sortOrder]);
+  const displayedProducts = products;
 
   const selectedTotal = cartItems
     .filter((item) => selectedItems.includes(item.cartId))
@@ -673,12 +668,12 @@ export default function ProductsPage() {
 
           {loadingProducts && <p>Loading products...</p>}
 
-          {!loadingProducts && sortedProducts.length === 0 && (
+          {!loadingProducts && displayedProducts.length === 0 && (
             <p>No products found for current filters.</p>
           )}
 
           <div className="product-list">
-            {sortedProducts.map((product) => (
+            {displayedProducts.map((product) => (
               <article key={product.productId} className="product-card">
                 <img src={product.imageUrl} alt={product.productName} />
                 <h3>{product.productName}</h3>
@@ -695,10 +690,10 @@ export default function ProductsPage() {
                 <p>Stock: {product.stockAmount}</p>
                 <button
                   type="button"
-                  disabled={showCheckout || product.stockAmount === 0}
+                  disabled={showCheckout || product.stockAmount === 0 || addingToCartIds.has(product.productId)}
                   onClick={() => handleAddToCart(product.productId)}
                 >
-                  Add to Cart
+                  {addingToCartIds.has(product.productId) ? "Adding..." : "Add to Cart"}
                 </button>
               </article>
             ))}

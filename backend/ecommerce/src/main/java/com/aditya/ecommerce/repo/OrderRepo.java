@@ -23,7 +23,5 @@ public interface OrderRepo extends JpaRepository<Orders, Integer> {
             """)
     List<Orders> findOrdersWithItemsByUser(@Param("user") User user);
 
-    List<Orders> findByUser(User user);
-
     List<Orders> findByAddress(Address address);
 }

@@ -15,5 +15,7 @@ public interface ProductRepo extends JpaRepository<Product, Integer> {
     List<Product> findAllByOrderByPriceDesc();
     List<Product> findAllByOrderByAvgRatingDesc();
     List<Product> findByAvgRatingGreaterThanEqual(float rating);
+    List<Product> findByCategory(String category);
+    List<Product> findByStockAmount(int stockAmount);
 
 }

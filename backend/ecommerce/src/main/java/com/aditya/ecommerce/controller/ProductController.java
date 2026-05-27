@@ -57,4 +57,14 @@ public class ProductController {
     public List<ProductResponseDTO> sortByRating(){
         return productService.sortByRatingDesc();
     }
+
+    @GetMapping("/products/category")
+    public List<ProductResponseDTO> getProductsByCategory(@RequestParam String name){
+        return productService.getProductsByCategory(name);
+    }
+
+    @GetMapping("/products/out-of-stock")
+    public List<ProductResponseDTO> getOutOfStockProducts(){
+        return productService.getOutOfStockProducts();
+    }
 }

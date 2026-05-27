@@ -2,6 +2,7 @@ package com.aditya.ecommerce.service;
 
 import com.aditya.ecommerce.dto.product.ProductResponseDTO;
 import com.aditya.ecommerce.entity.Product;
+import com.aditya.ecommerce.exception.ResourceNotFoundException;
 import com.aditya.ecommerce.repo.ProductRepo;
 import org.springframework.stereotype.Service;
 
@@ -38,10 +39,10 @@ public class ProductService {
                 .toList();
     }
 
-    public ProductResponseDTO getProductById(int id) throws Exception {
+    public ProductResponseDTO getProductById(int id){
         Optional<Product> product = productRepo.findById(id);
         if(!product.isPresent())
-            throw new Exception("Product not found");
+            throw new ResourceNotFoundException("Product not found");
         return mapToDTO(product.get());
     }
 
@@ -89,6 +90,20 @@ public class ProductService {
 
     public List<ProductResponseDTO> sortByRatingDesc(){
         return productRepo.findAllByOrderByAvgRatingDesc()
+                .stream()
+                .map(this :: mapToDTO)
+                .toList();
+    }
+
+    public List<ProductResponseDTO> getProductsByCategory(String category){
+        return productRepo.findByCategory(category)
+                .stream()
+                .map(this :: mapToDTO)
+                .toList();
+    }
+
+    public List<ProductResponseDTO> getOutOfStockProducts(){
+        return productRepo.findByStockAmount(0)
                 .stream()
                 .map(this :: mapToDTO)
                 .toList();

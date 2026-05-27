@@ -27,7 +27,6 @@ public class OrderService {
     private static final float DISCOUNT_RATE = 0.10f;
 
     private final OrderRepo orderRepo;
-    private final OrderItemRepo orderItemRepo;
     private final CartItemRepo cartItemRepo;
     private final UserRepo userRepo;
     private final AddressRepo addressRepo;
@@ -35,7 +34,6 @@ public class OrderService {
     private final ProductRatingRepo productRatingRepo;
 
     public OrderService(OrderRepo orderRepo,
-                        OrderItemRepo orderItemRepo,
                         CartItemRepo cartItemRepo,
                         UserRepo userRepo,
                         AddressRepo addressRepo,
@@ -43,7 +41,6 @@ public class OrderService {
                         ProductRatingRepo productRatingRepo) {
 
         this.orderRepo = orderRepo;
-        this.orderItemRepo = orderItemRepo;
         this.cartItemRepo = cartItemRepo;
         this.userRepo = userRepo;
         this.addressRepo = addressRepo;

@@ -15,7 +15,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.sql.Date;
-import java.util.Locale;
 import java.util.Optional;
 
 @Service
@@ -93,6 +92,6 @@ public class AuthService {
         if (email == null) {
             return null;
         }
-        return email.trim().toLowerCase(Locale.ROOT);
+        return email.trim().toLowerCase();
     }
 }
