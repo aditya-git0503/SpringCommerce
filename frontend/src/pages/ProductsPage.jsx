@@ -595,108 +595,112 @@ export default function ProductsPage() {
 
       <div className="products-layout">
         <section className="products-section">
-          <div className="filters-row">
-            <input
-              type="text"
-              placeholder="Search products"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
+          <div className="products-filters">
+            <div className="filters-row">
+              <input
+                type="text"
+                placeholder="Search products"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
 
-            <select
-              value={category}
-              onChange={(event) => setCategory(event.target.value)}
-            >
-              <option value="">Categories</option>
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
+              <select
+                value={category}
+                onChange={(event) => setCategory(event.target.value)}
+              >
+                <option value="">Categories</option>
+                {categories.map((cat) => (
+                  <option key={cat} value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
 
-            <select
-              value={sortOrder}
-              onChange={(event) => setSortOrder(event.target.value)}
-            >
-              <option value="">Default Sort</option>
-              <option value="lowToHigh">Price: Low to High</option>
-              <option value="highToLow">Price: High to Low</option>
-            </select>
+              <select
+                value={sortOrder}
+                onChange={(event) => setSortOrder(event.target.value)}
+              >
+                <option value="">Default Sort</option>
+                <option value="lowToHigh">Price: Low to High</option>
+                <option value="highToLow">Price: High to Low</option>
+              </select>
 
-            <select
-              value={availability}
-              onChange={(event) => setAvailability(event.target.value)}
-            >
-              <option value="">All Stock</option>
-              <option value="inStock">In Stock</option>
-              <option value="outOfStock">Out of Stock</option>
-            </select>
+              <select
+                value={availability}
+                onChange={(event) => setAvailability(event.target.value)}
+              >
+                <option value="">All Stock</option>
+                <option value="inStock">In Stock</option>
+                <option value="outOfStock">Out of Stock</option>
+              </select>
 
-            <select
-              value={ratingFilter}
-              onChange={(event) => setRatingFilter(event.target.value)}
-            >
-              <option value="">All Ratings</option>
-              <option value="4">4 & above</option>
-              <option value="3">3 & above</option>
-              <option value="2">2 & above</option>
-            </select>
+              <select
+                value={ratingFilter}
+                onChange={(event) => setRatingFilter(event.target.value)}
+              >
+                <option value="">All Ratings</option>
+                <option value="4">4 & above</option>
+                <option value="3">3 & above</option>
+                <option value="2">2 & above</option>
+              </select>
 
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="From price"
-              value={priceFrom}
-              onChange={(event) => setPriceFrom(event.target.value)}
-            />
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="From price"
+                value={priceFrom}
+                onChange={(event) => setPriceFrom(event.target.value)}
+              />
 
-            <input
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="To price"
-              value={priceTo}
-              onChange={(event) => setPriceTo(event.target.value)}
-            />
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="To price"
+                value={priceTo}
+                onChange={(event) => setPriceTo(event.target.value)}
+              />
 
-            <button type="button" onClick={clearProductFilters}>
-              Clear Filters
-            </button>
+              <button type="button" onClick={clearProductFilters}>
+                Clear Filters
+              </button>
+            </div>
           </div>
 
-          {loadingProducts && <p>Loading products...</p>}
+          <div className="products-scroll">
+            {loadingProducts && <p>Loading products...</p>}
 
-          {!loadingProducts && displayedProducts.length === 0 && (
-            <p>No products found for current filters.</p>
-          )}
+            {!loadingProducts && displayedProducts.length === 0 && (
+              <p>No products found for current filters.</p>
+            )}
 
-          <div className="product-list">
-            {displayedProducts.map((product) => (
-              <article key={product.productId} className="product-card">
-                <img src={product.imageUrl} alt={product.productName} />
-                <h3>{product.productName}</h3>
-                <p>{product.description}</p>
-                <p>Price: ₹{product.price}</p>
-                <p>
-                  Rating:{" "}
-                  {(
-                    (product.ratingCount ?? 0) > 0
-                      ? Number(product.avgRating || 0).toFixed(1)
-                      : "0.0"
-                  )} ({product.ratingCount ?? 0})
-                </p>
-                <p>Stock: {product.stockAmount}</p>
-                <button
-                  type="button"
-                  disabled={showCheckout || product.stockAmount === 0 || addingToCartIds.has(product.productId)}
-                  onClick={() => handleAddToCart(product.productId)}
-                >
-                  {addingToCartIds.has(product.productId) ? "Adding..." : "Add to Cart"}
-                </button>
-              </article>
-            ))}
+            <div className="product-list">
+              {displayedProducts.map((product) => (
+                <article key={product.productId} className="product-card">
+                  <img src={product.imageUrl} alt={product.productName} />
+                  <h3>{product.productName}</h3>
+                  <p>{product.description}</p>
+                  <p>Price: ₹{product.price}</p>
+                  <p>
+                    Rating:{" "}
+                    {(
+                      (product.ratingCount ?? 0) > 0
+                        ? Number(product.avgRating || 0).toFixed(1)
+                        : "0.0"
+                    )} ({product.ratingCount ?? 0})
+                  </p>
+                  <p>Stock: {product.stockAmount}</p>
+                  <button
+                    type="button"
+                    disabled={showCheckout || product.stockAmount === 0 || addingToCartIds.has(product.productId)}
+                    onClick={() => handleAddToCart(product.productId)}
+                  >
+                    {addingToCartIds.has(product.productId) ? "Adding..." : "Add to Cart"}
+                  </button>
+                </article>
+              ))}
+            </div>
           </div>
         </section>
 

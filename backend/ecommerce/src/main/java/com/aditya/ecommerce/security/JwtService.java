@@ -7,6 +7,7 @@ import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import jakarta.annotation.PostConstruct;
 
 import java.security.Key;
 import java.util.Date;
@@ -22,6 +23,35 @@ public class JwtService {
 
     @Value("${jwt.expiration}")
     private long EXPIRATION;
+
+    // Cached signing key after validation
+    private Key signingKey;
+
+    @PostConstruct
+    public void init() {
+        if (SECRET == null || SECRET.trim().isEmpty()) {
+            throw new IllegalStateException(
+                    "Missing required environment variable JWT_SECRET: provide a base64-encoded signing key");
+        }
+
+        byte[] keyBytes;
+        try {
+            keyBytes = Decoders.BASE64.decode(SECRET);
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalStateException("JWT_SECRET must be valid base64", ex);
+        }
+
+        if (keyBytes.length < 32) {
+            throw new IllegalStateException(
+                    "Decoded JWT_SECRET is too short: require at least 32 bytes (256 bits) for HS256");
+        }
+
+        try {
+            signingKey = Keys.hmacShaKeyFor(keyBytes);
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalStateException("Failed to construct HMAC key from JWT_SECRET", ex);
+        }
+    }
 
     public String generateToken(String email){
         Map<String, Object> claims = new HashMap<>();
@@ -39,8 +69,7 @@ public class JwtService {
     }
 
     private Key getSignKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(SECRET);
-        return Keys.hmacShaKeyFor(keyBytes);
+        return signingKey;
     }
 
     public String extractEmail(String token){
@@ -58,10 +87,10 @@ public class JwtService {
 
     private Claims extractAllClaims(String token){
         return Jwts.parser()
-                .setSigningKey(getSignKey())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+            .setSigningKey(getSignKey())
+            .build()
+            .parseSignedClaims(token)
+            .getPayload();
     }
 
     private boolean isTokenExpired(String token){
@@ -72,6 +101,5 @@ public class JwtService {
         final String extractedEmail = extractEmail(token);
         return (extractedEmail.equals(email) && !isTokenExpired(token));
     }
-
 
 }

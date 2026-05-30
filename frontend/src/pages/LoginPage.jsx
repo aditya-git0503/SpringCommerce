@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import api from "../api/client.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { getApiErrorMessage } from "../utils/apiError.js";
-import { clearGuestCart, getGuestCart } from "../utils/guestCart.js";
+import { clearGuestCart, getGuestCart, setGuestCart } from "../utils/guestCart.js";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -83,7 +83,7 @@ export default function LoginPage() {
       return;
     }
 
-    await Promise.all(
+    const results = await Promise.allSettled(
       guestCart.map((item) =>
         api.post("/cart/add", {
           productId: item.productId,
@@ -91,7 +91,17 @@ export default function LoginPage() {
         }),
       ),
     );
-    clearGuestCart();
+
+    const failedItems = guestCart.filter(
+      (_, index) => results[index].status === "rejected",
+    );
+
+    if (failedItems.length === 0) {
+      clearGuestCart();
+      return;
+    }
+
+    setGuestCart(failedItems);
   }
 
   async function handleRegisterSubmit(event) {

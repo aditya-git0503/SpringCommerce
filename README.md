@@ -52,6 +52,14 @@ To run this project locally, ensure you have the following installed on your mac
    export DATABASE_PASSWORD=your_local_password
    export JWT_SECRET=your_secure_base64_jwt_secret_key_here
    ```
+   Generate a secure JWT secret (base64-encoded, at least 32 bytes before encoding):
+   ```bash
+   openssl rand -base64 32
+   ```
+   Optional expiry override (milliseconds):
+   ```bash
+   export JWT_EXPIRATION=3600000
+   ```
 3. Run the Spring Boot application using Maven:
    ```bash
    ./mvnw spring-boot:run
@@ -101,5 +109,6 @@ The application is deployed and hosted in the cloud. You do not need to install 
 
 ## Important Developer Notes
 - **Environment Variables**: The project enforces a strict "zero-hardcoded-secrets" policy. Both the frontend and backend require `.env` or system environment variables to function. Do not commit `.env` or `.env.local` files to version control.
+- **JWT Secret Rotation**: Changing `JWT_SECRET` will invalidate all existing tokens. Plan for a logout/re-login window when rotating secrets.
 - **Database Seeding**: The `backend/ecommerce/src/main/resources/data.sql` file contains the initial data for the store. It is set to run automatically (`spring.sql.init.mode=always`).
 - **Discount Code**: There is a hardcoded promotional code in the frontend (`ProductsPage.jsx`) for demonstration purposes. Use `WELCOME10` to apply a 10% discount during checkout.
