@@ -9,6 +9,7 @@ This project demonstrates a production-ready web application with secure JWT aut
 - **Shopping Cart**: Guest cart (persisted in local storage) and authenticated user cart.
 - **Checkout Flow**: Seamless conversion from cart to order, supporting address management.
 - **Discount System**: Apply promotional codes at checkout (e.g., `WELCOME10` for 10% off).
+- **Popup Notifications**: Toast-style feedback for cart updates, address changes, discounts, orders, and errors.
 - **Order Management**: Track order history, view detailed bills, and print invoices.
 - **Security**: JWT-based stateless authentication, BCrypt password hashing, and clean environment-variable configuration.
 
@@ -102,6 +103,7 @@ The application is deployed and hosted in the cloud. You do not need to install 
 2. You can immediately browse products and add items to your cart as a Guest.
 3. To place an order, click **Sign In** and create a new account via the **Sign Up** tab.
 4. Try adding items to your cart, proceeding to checkout, and entering the discount code **`WELCOME10`** to see the logic in action.
+5. Cart, address, discount, and order actions show popup notifications so you get immediate feedback while using the site.
 
 *(Note: The backend API is hosted on a free Render tier and may take 30-50 seconds to "wake up" upon the very first request if it has been idle. Please be patient on the first page load!)*
 
