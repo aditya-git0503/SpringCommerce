@@ -51,6 +51,7 @@ export default function ProductsPage() {
   const [loadingCart, setLoadingCart] = useState(true);
   const [actionError, setActionError] = useState("");
   const [actionSuccess, setActionSuccess] = useState("");
+  const [toast, setToast] = useState(null);
   const [addingToCartIds, setAddingToCartIds] = useState(new Set());
   const { showScrollTop, handleScrollToTop } = useScrollToTop();
 
@@ -154,6 +155,26 @@ export default function ProductsPage() {
       setTimeout(() => setAppliedDiscountCode(""), 0);
     }
   }, [selectedItems.length]);
+
+  useEffect(() => {
+    if (!toast) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setToast(null);
+    }, 2800);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [toast]);
+
+  function showToast(message, type = "success") {
+    setToast({
+      id: Date.now(),
+      message,
+      type,
+    });
+  }
 
 
   async function loadProducts() {
@@ -293,7 +314,9 @@ export default function ProductsPage() {
 
       const product = products.find((item) => item.productId === productId);
       if (!product) {
-        setActionError("Product not found");
+        const message = "Product not found";
+        setActionError(message);
+        showToast(message, "error");
         return;
       }
 
@@ -303,12 +326,15 @@ export default function ProductsPage() {
         );
         const nextQuantity = (existingItem?.quantity || 0) + 1;
         if (nextQuantity > product.stockAmount) {
-          setActionError("Requested quantity exceeds available stock");
+          const message = "Requested quantity exceeds available stock";
+          setActionError(message);
+          showToast(message, "error");
           return;
         }
 
         addGuestCartItem(productId, 1);
         loadGuestCartItems();
+        showToast(`${product.productName} added to cart`);
         return;
       }
 
@@ -317,8 +343,11 @@ export default function ProductsPage() {
         quantity: 1,
       });
       await loadCartItems();
+      showToast(`${product.productName} added to cart`);
     } catch (err) {
-      setActionError(getApiErrorMessage(err, "Failed to add to cart"));
+      const message = getApiErrorMessage(err, "Failed to add to cart");
+      setActionError(message);
+      showToast(message, "error");
     } finally {
       setAddingToCartIds((prev) => {
         const next = new Set(prev);
@@ -334,17 +363,22 @@ export default function ProductsPage() {
       if (!isAuthenticated) {
         const product = products.find((item) => item.productId === productId);
         if (!product) {
-          setActionError("Product not found");
+          const message = "Product not found";
+          setActionError(message);
+          showToast(message, "error");
           return;
         }
 
         if (quantity > product.stockAmount) {
-          setActionError("Requested quantity exceeds available stock");
+          const message = "Requested quantity exceeds available stock";
+          setActionError(message);
+          showToast(message, "error");
           return;
         }
 
         updateGuestCartItem(productId, quantity);
         loadGuestCartItems();
+        showToast(quantity <= 0 ? "Item removed from cart" : "Cart updated");
         return;
       }
 
@@ -352,8 +386,11 @@ export default function ProductsPage() {
         params: { cartId, quantity },
       });
       await loadCartItems();
+      showToast(quantity <= 0 ? "Item removed from cart" : "Cart updated");
     } catch (err) {
-      setActionError(getApiErrorMessage(err, "Failed to update quantity"));
+      const message = getApiErrorMessage(err, "Failed to update quantity");
+      setActionError(message);
+      showToast(message, "error");
     }
   }
 
@@ -363,13 +400,17 @@ export default function ProductsPage() {
       if (!isAuthenticated) {
         removeGuestCartItem(productId);
         loadGuestCartItems();
+        showToast("Item removed from cart");
         return;
       }
 
       await api.delete(`/cart/remove/${cartId}`);
       await loadCartItems();
+      showToast("Item removed from cart");
     } catch (err) {
-      setActionError(getApiErrorMessage(err, "Failed to remove cart item"));
+      const message = getApiErrorMessage(err, "Failed to remove cart item");
+      setActionError(message);
+      showToast(message, "error");
     }
   }
 
@@ -400,20 +441,22 @@ export default function ProductsPage() {
       if (editingAddressId) {
         await api.put(`/address/${editingAddressId}`, payload);
         setActionSuccess("Address updated successfully");
+        showToast("Address updated successfully");
       } else {
         await api.post("/address/add", payload);
         setActionSuccess("Address saved successfully");
+        showToast("Address saved successfully");
       }
       setAddressForm(emptyAddressForm);
       setEditingAddressId(null);
       await loadAddresses();
     } catch (err) {
-      setActionError(
-        getApiErrorMessage(
-          err,
-          editingAddressId ? "Failed to update address" : "Failed to save address",
-        ),
+      const message = getApiErrorMessage(
+        err,
+        editingAddressId ? "Failed to update address" : "Failed to save address",
       );
+      setActionError(message);
+      showToast(message, "error");
     }
   }
 
@@ -440,12 +483,15 @@ export default function ProductsPage() {
     try {
       await api.delete(`/address/${addressId}`);
       setActionSuccess("Address deleted successfully");
+      showToast("Address deleted successfully");
       if (editingAddressId === addressId) {
         handleCancelAddressEdit();
       }
       await loadAddresses();
     } catch (err) {
-      setActionError(getApiErrorMessage(err, "Failed to delete address"));
+      const message = getApiErrorMessage(err, "Failed to delete address");
+      setActionError(message);
+      showToast(message, "error");
     }
   }
 
@@ -461,6 +507,7 @@ export default function ProductsPage() {
           appliedDiscountCode.trim() === "" ? null : appliedDiscountCode.trim(),
       });
       setActionSuccess("Order placed successfully");
+      showToast("Order placed successfully");
       await Promise.all([loadCartItems(), loadProducts()]);
       setShowCheckout(false);
       setDiscountCode("");
@@ -469,7 +516,9 @@ export default function ProductsPage() {
         localStorage.removeItem(`discountCode:${user.userId}`);
       }
     } catch (err) {
-      setActionError(getApiErrorMessage(err, "Failed to place order"));
+      const message = getApiErrorMessage(err, "Failed to place order");
+      setActionError(message);
+      showToast(message, "error");
     }
   }
 
@@ -540,6 +589,7 @@ export default function ProductsPage() {
 
     if (!hasSelectedItems) {
       setDiscountError(noSelectionError);
+      showToast(noSelectionError, "error");
       return;
     }
 
@@ -547,22 +597,44 @@ export default function ProductsPage() {
     if (trimmedCode === "") {
       setAppliedDiscountCode("");
       setDiscountError("Enter a discount code.");
+      showToast("Enter a discount code.", "error");
       return;
     }
 
     if (trimmedCode.toLowerCase() !== "welcome10") {
       setAppliedDiscountCode("");
       setDiscountError("Invalid discount code.");
+      showToast("Invalid discount code.", "error");
       return;
     }
 
     setAppliedDiscountCode(trimmedCode);
     setDiscountError("");
+    showToast("Discount applied");
   }
 
 
   return (
     <div className="page products-page">
+      {toast && (
+        <div
+          key={toast.id}
+          className={`toast-notification ${toast.type}`}
+          role="status"
+          aria-live="polite"
+        >
+          <span className="toast-dot" aria-hidden="true" />
+          <p>{toast.message}</p>
+          <button
+            type="button"
+            aria-label="Dismiss notification"
+            onClick={() => setToast(null)}
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       <header className="top-nav">
         <div>
           <h2>Products</h2>
